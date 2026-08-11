@@ -1,0 +1,116 @@
+﻿@model AlmaVault.Models.Domains.ApplicationUser
+
+@{
+    ViewData["Title"] = "Alumni Dashboard";
+    var directory = ViewBag.DirectoryEntry as AlmaVault.Models.Domains.AlumniDirectoryDM;
+}
+
+<div class="container py-4">
+    <!-- Header / Welcome Banner -->
+    <div class="card border-0 bg-dark text-white rounded-4 p-4 mb-4 shadow">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <span class="badge bg-primary-subtle text-primary fw-semibold px-3 py-1 rounded-pill mb-2">
+                    <i class="bi bi-patch-check-fill me-1"></i> Verified Alumnus
+                </span>
+                <h2 class="fw-bold mb-1">Welcome back, @Model.FullName!</h2>
+                <p class="text-white-50 mb-0">
+                    @Model.Designation at <strong class="text-white">@Model.CurrentCompany</strong> &bull; Class of @Model.GraduationYear
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a asp-controller="AlumniDirectoryDM" asp-action="Index" class="btn btn-outline-light rounded-pill px-4">
+                    <i class="bi bi-search me-1"></i> Explore Network
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-3 p-3 d-flex flex-row align-items-center gap-3">
+                <div class="bg-primary text-white p-3 rounded-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                    <i class="bi bi-briefcase fs-4"></i>
+                </div>
+                <div>
+                    <h6 class="text-muted small mb-0 fw-semibold">Job Postings</h6>
+                    <h4 class="fw-bold mb-0">0 Active</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-3 p-3 d-flex flex-row align-items-center gap-3">
+                <div class="bg-success text-white p-3 rounded-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                    <i class="bi bi-people fs-4"></i>
+                </div>
+                <div>
+                    <h6 class="text-muted small mb-0 fw-semibold">Mentorship Requests</h6>
+                    <h4 class="fw-bold mb-0">0 Pending</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-3 p-3 d-flex flex-row align-items-center gap-3">
+                <div class="bg-warning text-dark p-3 rounded-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                    <i class="bi bi-mortarboard fs-4"></i>
+                </div>
+                <div>
+                    <h6 class="text-muted small mb-0 fw-semibold">Department</h6>
+                    <h5 class="fw-bold mb-0">@Model.Department</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions & Profile Info -->
+    <div class="row g-4">
+        <!-- Quick Actions -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-lightning-charge text-warning me-2"></i>Quick Actions</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="border rounded-3 p-3 hover-shadow">
+                            <h6 class="fw-bold mb-1"><i class="bi bi-plus-circle text-primary me-2"></i>Post a Job / Internship</h6>
+                            <p class="text-muted small mb-3">Share career opportunities with current students and fellow alumni.</p>
+                            <a href="#" class="btn btn-sm btn-outline-primary rounded-pill">Create Post</a>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="border rounded-3 p-3 hover-shadow">
+                            <h6 class="fw-bold mb-1"><i class="bi bi-person-lines-fill text-success me-2"></i>Directory Profile</h6>
+                            <p class="text-muted small mb-3">Keep your location, company, and contact visibility up-to-date.</p>
+                            <a href="#" class="btn btn-sm btn-outline-success rounded-pill">Update Profile</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Details Sidebar -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-person-vcard me-2"></i>Profile Details</h5>
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <strong class="small text-muted d-block">Full Name</strong>
+                        <span>@Model.FullName</span>
+                    </li>
+                    <li class="mb-2">
+                        <strong class="small text-muted d-block">Email</strong>
+                        <span>@Model.Email</span>
+                    </li>
+                    <li class="mb-2">
+                        <strong class="small text-muted d-block">University Roll Number</strong>
+                        <span>@Model.RollNumber</span>
+                    </li>
+                    <li class="mb-2">
+                        <strong class="small text-muted d-block">Current Role</strong>
+                        <span>@Model.Designation at @Model.CurrentCompany</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

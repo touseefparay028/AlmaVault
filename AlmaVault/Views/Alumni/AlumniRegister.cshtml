@@ -1,0 +1,101 @@
+﻿@model AlmaVault.Models.ViewModel.AlumniRegisterVM
+
+@{
+    ViewData["Title"] = "Alumni Registration";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="card-header bg-dark text-white text-center py-4 border-0">
+                    <div class="brand-icon bg-white text-dark mx-auto mb-2 shadow-sm d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border-radius: 12px; font-size: 1.5rem;">
+                        <i class="bi bi-award-fill"></i>
+                    </div>
+                    <h4 class="fw-bold mb-0">Alumni Registration</h4>
+                    <p class="small text-white-50 mb-0">Verify your academic record and join the AlmaVault alumni network</p>
+                </div>
+
+                <div class="card-body p-4">
+                    <form asp-controller="Alumni" asp-action="RegisterAlumni" method="post">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger p-2 small mb-3"></div>
+
+                        <div class="row g-3">
+                            <!-- Full Name -->
+                            <div class="col-12">
+                                <label asp-for="FullName" class="form-label small fw-semibold text-dark"></label>
+                                <input asp-for="FullName" class="form-control bg-light" placeholder="John Doe" />
+                                <span asp-validation-for="FullName" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="col-md-6">
+                                <label asp-for="Email" class="form-label small fw-semibold text-dark"></label>
+                                <input asp-for="Email" class="form-control bg-light" placeholder="alumni@company.com" />
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Roll Number -->
+                            <div class="col-md-6">
+                                <label asp-for="RollNumber" class="form-label small fw-semibold text-dark"></label>
+                                <input asp-for="RollNumber" class="form-control bg-light" placeholder="e.g., CS202001" />
+                                <span asp-validation-for="RollNumber" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Graduation Year -->
+                            <div class="col-12">
+                                <label asp-for="GraduationYear" class="form-label small fw-semibold text-dark"></label>
+                                <input asp-for="GraduationYear" type="number" class="form-control bg-light" placeholder="e.g., 2024" />
+                                <span asp-validation-for="GraduationYear" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Current Company -->
+                            <div class="col-md-6">
+                                <label asp-for="CurrentCompany" class="form-label small fw-semibold text-dark"></label>
+                                <input asp-for="CurrentCompany" class="form-control bg-light" placeholder="Microsoft, Google, etc." />
+                                <span asp-validation-for="CurrentCompany" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Designation -->
+                            <div class="col-md-6">
+                                <label asp-for="Designation" class="form-label small fw-semibold text-dark"></label>
+                                <input asp-for="Designation" class="form-control bg-light" placeholder="Software Engineer" />
+                                <span asp-validation-for="Designation" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Password -->
+                            <div class="col-md-6">
+                                <label asp-for="Password" class="form-label small fw-semibold text-dark"></label>
+                                <input asp-for="Password" class="form-control bg-light" type="password" />
+                                <span asp-validation-for="Password" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Confirm Password -->
+                            <div class="col-md-6">
+                                <label asp-for="ConfirmPassword" class="form-label small fw-semibold text-dark"></label>
+                                <input asp-for="ConfirmPassword" class="form-control bg-light" type="password" />
+                                <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-dark rounded-pill py-2 fw-bold shadow-sm">
+                                Register as Alumnus <i class="bi bi-arrow-right ms-1"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <!-- Footer Link -->
+                    <div class="card-footer bg-light text-center py-3 border-0">
+                        <span class="small text-muted">Already have an account?</span>
+                        <a asp-action="AlumniLogin" asp-controller="Alumni" class="small fw-bold text-primary text-decoration-none ms-1">Login Here</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

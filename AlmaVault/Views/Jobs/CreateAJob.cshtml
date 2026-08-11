@@ -1,0 +1,53 @@
+﻿@model AlmaVault.Models.Domains.JobPosting
+
+@{
+    ViewData["Title"] = "Post a New Opportunity";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <h4 class="fw-bold mb-3"><i class="bi bi-plus-circle-fill text-primary me-2"></i>Post Job or Internship</h4>
+                <form asp-action="CreateNow" asp-controller="Jobs" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label fw-semibold">Job Title</label>
+                        <input asp-for="Title" class="form-control" placeholder="e.g. Software Engineer / Data Analyst Intern" required />
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="CompanyName" class="form-label fw-semibold">Company Name</label>
+                            <input asp-for="CompanyName" class="form-control" placeholder="e.g. Microsoft" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="EmploymentType" class="form-label fw-semibold">Employment Type</label>
+                            <select asp-for="EmploymentType" class="form-select">
+                                <option value="Full-Time">Full-Time</option>
+                                <option value="Part-Time">Part-Time</option>
+                                <option value="Internship">Internship</option>
+                                <option value="Remote">Remote</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Location" class="form-label fw-semibold">Location</label>
+                        <input asp-for="Location" class="form-control" placeholder="e.g. Bangalore, India or Remote" required />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label fw-semibold">Job Description</label>
+                        <textarea asp-for="Description" class="form-control" rows="4" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ApplicationUrlOrEmail" class="form-label fw-semibold">Application Email / Link</label>
+                        <input asp-for="ApplicationUrlOrEmail" class="form-control" placeholder="careers@company.com or https://..." required />
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <a asp-action="Index" class="btn btn-light rounded-pill px-4">Cancel</a>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Publish Post</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

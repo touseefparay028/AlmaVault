@@ -1,0 +1,73 @@
+﻿using AlmaVault.Models.Domains;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+
+namespace AlmaVault.Data
+{
+    public class AVDbContext : IdentityDbContext<ApplicationUser>
+    {
+        public AVDbContext(DbContextOptions<AVDbContext> options) : base(options) { }
+
+        // Master Records & Identity
+        public DbSet<HistoricalStudent> HistoricalStudents => Set<HistoricalStudent>();
+
+        // Modules
+        public DbSet<ContributionLedger> ContributionLedgers => Set<ContributionLedger>();
+        public DbSet<JobPosting> JobPostings => Set<JobPosting>();
+        public DbSet<MentorshipSession> MentorshipSessions => Set<MentorshipSession>();
+        public DbSet<AlumniDirectoryDM> AlumniDirectoryDMs => Set<AlumniDirectoryDM>();
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            // 1. Configure default Identity tables
+            base.OnModelCreating(modelBuilder);
+
+            // 2. HistoricalStudent Entity Configuration
+            modelBuilder.Entity<HistoricalStudent>()
+                .HasKey(h => h.StudentIdNumber);
+
+            // 3. ApplicationUser Configuration (RollNumber declared without FK restriction)
+            modelBuilder.Entity<ApplicationUser>(entity =>
+            {
+                entity.Property(u => u.RollNumber)
+                      .IsRequired(false);
+            });
+
+            // 4. ContributionLedger Configuration (Guid PK & Precision)
+            modelBuilder.Entity<ContributionLedger>(entity =>
+            {
+                entity.HasKey(c => c.Id);
+
+                entity.Property(c => c.Amount)
+                      .HasPrecision(18, 2);
+
+                entity.HasOne(c => c.User)
+                      .WithMany(u => u.Contributions)
+                      .HasForeignKey(c => c.UserId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // 5. JobPosting Configuration (Guid PK)
+            modelBuilder.Entity<JobPosting>(entity =>
+            {
+                entity.HasKey(j => j.Id);
+
+                entity.HasOne(j => j.PostedByUser)
+                      .WithMany(u => u.JobPostings)
+                      .HasForeignKey(j => j.PostedByUserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // 6. MentorshipSession Configuration (Guid PK)
+            modelBuilder.Entity<MentorshipSession>(entity =>
+            {
+                entity.HasKey(m => m.Id);
+
+                entity.HasOne(m => m.Mentor)
+                      .WithMany(u => u.MentorshipSessions)
+                      .HasForeignKey(m => m.MentorId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+        }
+    }
+}

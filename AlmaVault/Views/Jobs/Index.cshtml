@@ -1,0 +1,81 @@
+﻿@model IEnumerable<AlmaVault.Models.Domains.JobPosting>
+
+@{
+    ViewData["Title"] = "Career Opportunities";
+}
+
+<div class="container py-4">
+    <div class="card border-0 bg-dark text-white rounded-4 p-4 mb-4 shadow">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="fw-bold mb-1"><i class="bi bi-briefcase-fill me-2"></i>Job & Internship Board</h2>
+                <p class="text-white-50 mb-0">Explore positions posted directly by verified AlmaVault alumni.</p>
+            </div>
+            @if (User.IsInRole("Alumni"))
+            {
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <a asp-action="CreateAJob" asp-controller="Jobs" class="btn btn-primary rounded-pill px-4">
+                        <i class="bi bi-plus-lg me-1"></i> Post an Opportunity
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-3 mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Search / Filter -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4">
+        <form asp-action="Index" method="get">
+            <div class="row g-2">
+                <div class="col-md-7">
+                    <input type="text" name="search" value="@ViewBag.Search" class="form-control bg-light" placeholder="Search by job title, company, or city..." />
+                </div>
+                <div class="col-md-3">
+                    <select name="type" class="form-select bg-light">
+                        <option value="">All Types</option>
+                        <option value="Full-Time">Full-Time</option>
+                        <option value="Part-Time">Part-Time</option>
+                        <option value="Internship">Internship</option>
+                        <option value="Remote">Remote</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-grid">
+                    <button type="submit" class="btn btn-dark fw-semibold rounded-3">Filter</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Job Cards -->
+    <div class="row g-3">
+        @foreach (var job in Model)
+        {
+            <div class="col-12">
+                <div class="card border-0 shadow-sm rounded-4 p-3 hover-shadow transition">
+                    <div class="d-md-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-primary-subtle text-primary mb-2 fw-semibold px-2 py-1 rounded-pill">@job.EmploymentType</span>
+                            <h5 class="fw-bold mb-1 text-dark">@job.Title</h5>
+                            <p class="text-muted small mb-2">
+                                <strong class="text-dark">@job.CompanyName</strong> &bull; <i class="bi bi-geo-alt text-muted"></i> @job.Location
+                            </p>
+                            <p class="text-muted small mb-0">Posted by: <strong>@(job.PostedByUser?.FullName ?? "Alumnus")</strong> &bull; @job.PostedDate.ToString("MMM dd, yyyy")</p>
+                        </div>
+                        <div class="mt-3 mt-md-0 text-md-end">
+                            <a asp-action="Details" asp-route-id="@job.Id" class="btn btn-outline-primary rounded-pill px-4 btn-sm">
+                                View & Apply <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

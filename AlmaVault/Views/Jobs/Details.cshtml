@@ -1,0 +1,113 @@
+﻿@model AlmaVault.Models.Domains.JobPosting
+
+@{
+    ViewData["Title"] = Model.Title + " - Job Details";
+    var isUrl = Model.ApplicationUrlOrEmail.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                Model.ApplicationUrlOrEmail.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+    var applyLink = isUrl ? Model.ApplicationUrlOrEmail : $"mailto:{Model.ApplicationUrlOrEmail}?subject=Application for {Model.Title} position";
+}
+
+<div class="container py-4">
+    <!-- Breadcrumb / Back Button -->
+    <div class="mb-3">
+        <a asp-action="Index" class="btn btn-sm btn-outline-secondary rounded-pill">
+            <i class="bi bi-arrow-left me-1"></i> Back to Opportunities
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Job Details Column -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge bg-primary-subtle text-primary fw-semibold px-3 py-1 rounded-pill">
+                        @Model.EmploymentType
+                    </span>
+                    <span class="text-muted small">
+                        <i class="bi bi-clock me-1"></i> Posted @Model.PostedDate.ToString("MMM dd, yyyy")
+                    </span>
+                </div>
+
+                <h2 class="fw-bold text-dark mb-1">@Model.Title</h2>
+                <h5 class="text-primary fw-semibold mb-3">@Model.CompanyName</h5>
+
+                <div class="d-flex flex-wrap gap-3 text-muted small pb-3 mb-4 border-bottom">
+                    <div><i class="bi bi-geo-alt text-danger me-1"></i>@Model.Location</div>
+                    <div><i class="bi bi-building text-secondary me-1"></i>@Model.CompanyName</div>
+                    <div><i class="bi bi-briefcase text-success me-1"></i>@Model.EmploymentType</div>
+                </div>
+
+                <!-- Job Description -->
+                <div class="mb-4">
+                    <h5 class="fw-bold text-dark mb-2"><i class="bi bi-file-text me-2 text-primary"></i>Job Description</h5>
+                    <p class="text-secondary lh-lg mb-0" style="white-space: pre-line;">@Model.Description</p>
+                </div>
+
+                <!-- Requirements (If Provided) -->
+                @if (!string.IsNullOrWhiteSpace(Model.Requirements))
+                {
+                    <div class="mb-4">
+                        <h5 class="fw-bold text-dark mb-2"><i class="bi bi-check2-square me-2 text-primary"></i>Requirements & Qualifications</h5>
+                        <p class="text-secondary lh-lg mb-0" style="white-space: pre-line;">@Model.Requirements</p>
+                    </div>
+                }
+
+                <!-- Apply Callout Box -->
+                <div class="bg-light rounded-4 p-4 mt-4 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                    <div>
+                        <h6 class="fw-bold text-dark mb-1">Interested in this position?</h6>
+                        <p class="text-muted small mb-0">Apply directly using the contact details or portal link provided by the referrer.</p>
+                    </div>
+                    <a href="@applyLink" target="_blank" class="btn btn-primary rounded-pill px-4 py-2 fw-bold text-nowrap shadow-sm">
+                        Apply Now <i class="bi bi-box-arrow-up-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar: Poster & Quick Info -->
+        <div class="col-lg-4">
+            <!-- Referred By Card -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                <h6 class="fw-bold text-dark mb-3"><i class="bi bi-person-badge text-primary me-2"></i>Posted By Alumnus</h6>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-primary text-white fw-bold rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-size: 1.2rem;">
+                        @(Model.PostedByUser?.FullName?.Substring(0, 1).ToUpper() ?? "A")
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark">@(Model.PostedByUser?.FullName ?? "Verified Alumnus")</h6>
+                        <span class="small text-muted">@Model.PostedByUser?.Designation at @Model.PostedByUser?.CurrentCompany</span>
+                    </div>
+                </div>
+                <hr class="my-3" />
+                <ul class="list-unstyled mb-0 small text-muted">
+                    <li class="mb-2"><strong class="text-dark">Department:</strong> @(Model.PostedByUser?.Department ?? "N/A")</li>
+                    <li class="mb-2"><strong class="text-dark">Graduation Year:</strong> @(Model.PostedByUser?.GraduationYear.ToString() ?? "N/A")</li>
+                </ul>
+            </div>
+
+            <!-- Quick Summary Card -->
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <h6 class="fw-bold text-dark mb-3"><i class="bi bi-info-circle text-primary me-2"></i>Opportunity Summary</h6>
+                <ul class="list-unstyled mb-0 small text-secondary">
+                    <li class="mb-2 d-flex justify-content-between">
+                        <span>Company:</span>
+                        <strong class="text-dark">@Model.CompanyName</strong>
+                    </li>
+                    <li class="mb-2 d-flex justify-content-between">
+                        <span>Location:</span>
+                        <strong class="text-dark">@Model.Location</strong>
+                    </li>
+                    <li class="mb-2 d-flex justify-content-between">
+                        <span>Type:</span>
+                        <strong class="text-dark">@Model.EmploymentType</strong>
+                    </li>
+                    <li class="d-flex justify-content-between">
+                        <span>Posted On:</span>
+                        <strong class="text-dark">@Model.PostedDate.ToString("MMM dd, yyyy")</strong>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

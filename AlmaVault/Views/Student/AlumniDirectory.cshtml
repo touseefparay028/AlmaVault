@@ -1,0 +1,62 @@
+﻿@model AlmaVault.Models.ViewModel.AlumniDirectoryVM
+
+@{
+    ViewData["Title"] = "Alumni Directory & Network";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Alumni Network Directory</h2>
+        <a asp-action="Dashboard" class="btn btn-outline-secondary">Back to Dashboard</a>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <form method="get" class="row g-3 mb-4">
+        <div class="col-md-6">
+            <input type="text" name="searchTerm" value="@Model.SearchTerm" class="form-control" placeholder="Search by company, role, or location..." />
+        </div>
+        <div class="col-md-4">
+            <input type="text" name="departmentFilter" value="@Model.DepartmentFilter" class="form-control" placeholder="Filter by Department..." />
+        </div>
+        <div class="col-md-2 d-grid">
+            <button type="submit" class="btn btn-primary fw-semibold">Search</button>
+        </div>
+    </form>
+
+    <!-- Alumni Cards Grid -->
+    <div class="row g-4">
+        @if (!Model.AlumniList.Any())
+        {
+            <div class="col-12 text-center py-5">
+                <p class="text-muted fs-5">No verified alumni found matching your search criteria.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var alumni in Model.AlumniList)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm border-0 rounded-3">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold fs-4 me-3" style="width: 50px; height: 50px;">
+                                    @alumni.FullName[0]
+                                </div>
+                                <div>
+                                    <h5 class="card-title mb-0 font-weight-bold">@alumni.FullName</h5>
+                                    <small class="text-muted">Class of @alumni.GraduationYear • @alumni.Department</small>
+                                </div>
+                            </div>
+                            <hr />
+                            <p class="card-text mb-1"><strong>Role:</strong> @alumni.Designation</p>
+                            <p class="card-text mb-1"><strong>Company:</strong> @alumni.CurrentCompany</p>
+                            <p class="card-text mb-3"><strong>Location:</strong> @alumni.Location</p>
+
+                            <a href="mailto:@alumni.Email" class="btn btn-outline-primary btn-sm w-100 fw-semibold">Request Mentorship / Connect</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>

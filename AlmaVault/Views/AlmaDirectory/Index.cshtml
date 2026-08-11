@@ -1,0 +1,118 @@
+﻿@model AlmaVault.Models.ViewModel.AlumniDirectoryVM
+
+@{
+    ViewData["Title"] = "AlmaDirectory - Search Network";
+    var departments = ViewBag.Departments as List<string> ?? new List<string>();
+}
+
+<div class="container py-4">
+    <!-- Header Banner -->
+    <div class="card border-0 bg-primary text-white rounded-4 p-4 mb-4 shadow">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="fw-bold mb-1"><i class="bi bi-people-fill me-2"></i>AlmaDirectory</h2>
+                <p class="text-white-50 mb-0">Search, connect, and network with verified alumni and members of AlmaVault.</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <span class="badge bg-white text-primary fs-6 px-3 py-2 rounded-pill shadow-sm">
+                    @Model.AlumniList.Count Members Found
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search & Filter Controls -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4">
+        <form asp-controller="AlmaDirectory" asp-action="Index" method="get">
+            <div class="row g-2">
+                <!-- Text Search -->
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" name="searchTerm" value="@Model.SearchTerm" class="form-control bg-light border-start-0" placeholder="Search by name, company, or designation..." />
+                    </div>
+                </div>
+
+                <!-- Department Filter Dropdown -->
+                <div class="col-md-4">
+                    <select name="departmentFilter" class="form-select bg-light">
+                        <option value="">All Departments</option>
+                        @foreach (var dept in departments)
+                        {
+                            if (dept == Model.DepartmentFilter)
+                            {
+                                <option value="@dept" selected>@dept</option>
+                            }
+                            else
+                            {
+                                <option value="@dept">@dept</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <!-- Search Button -->
+                <div class="col-md-2 d-grid">
+                    <button type="submit" class="btn btn-primary fw-semibold rounded-3">
+                        Filter Results
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Alumni Profile Cards Grid -->
+    @if (!Model.AlumniList.Any())
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-person-x fs-1 text-muted"></i>
+            <h5 class="fw-bold mt-2 text-dark">No members found</h5>
+            <p class="text-muted small">Try broadening your search terms or clearing department filters.</p>
+            <a asp-action="Index" class="btn btn-outline-primary btn-sm rounded-pill mt-2">Clear Filters</a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var alumni in Model.AlumniList)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 hover-shadow transition">
+                        <div class="card-body p-4 d-flex flex-column">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="bg-primary-subtle text-primary fw-bold rounded-circle d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; font-size: 1.25rem;">
+                                    @alumni.FullName.Substring(0, 1).ToUpper()
+                                </div>
+                                <div>
+                                    <h5 class="fw-bold mb-0 text-dark">@alumni.FullName</h5>
+                                    <span class="badge bg-success-subtle text-success small fw-semibold rounded-pill">
+                                        Class of @alumni.GraduationYear
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <p class="text-dark fw-semibold mb-1 small">
+                                    <i class="bi bi-briefcase text-muted me-2"></i>@alumni.Designation
+                                </p>
+                                <p class="text-muted mb-1 small">
+                                    <i class="bi bi-building text-muted me-2"></i>@alumni.CurrentCompany
+                                </p>
+                                <p class="text-muted mb-0 small">
+                                    <i class="bi bi-mortarboard text-muted me-2"></i>@alumni.Department
+                                </p>
+                            </div>
+
+                            <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
+                                <a href="mailto:@alumni.Email" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                    <i class="bi bi-envelope me-1"></i> Contact
+                                </a>
+                                <span class="small text-muted"><i class="bi bi-patch-check-fill text-primary"></i> Verified</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

@@ -1,0 +1,142 @@
+﻿@model AlmaVault.Models.ViewModel.AdminTransitionDashboardVM
+
+@{
+    ViewData["Title"] = "Student to Alumni Role Transition";
+}
+
+<div class="container py-4">
+    <!-- Header -->
+    <div class="card border-0 bg-dark text-white rounded-4 p-4 mb-4 shadow">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold mb-1"><i class="bi bi-person-up me-2 text-warning"></i>Student Role Transitions</h2>
+                <p class="text-white-50 mb-0">Promote graduating students to verified Alumni status and maintain historical records.</p>
+            </div>
+            <div>
+                <span class="badge bg-warning text-dark fs-6 px-3 py-2 rounded-pill">
+                    @Model.EligibleStudents.Count Pending Students
+                </span>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-3 mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Tabs Navigation -->
+    <ul class="nav nav-pills mb-4 gap-2" id="transitionTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active rounded-pill px-4 fw-semibold" id="eligible-tab" data-bs-toggle="tab" data-bs-target="#eligible-pane" type="button" role="tab">
+                <i class="bi bi-mortarboard me-1"></i> Active Students (@Model.EligibleStudents.Count)
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-pill px-4 fw-semibold" id="history-tab" data-bs-toggle="tab" data-bs-target="#history-pane" type="button" role="tab">
+                <i class="bi bi-clock-history me-1"></i> Transition History (@Model.HistoricalRecords.Count)
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="transitionTabsContent">
+        <!-- Tab 1: Active Students -->
+        <div class="tab-pane fade show active" id="eligible-pane" role="tabpanel">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Student</th>
+                                <th>Department</th>
+                                <th>Grad Year</th>
+                                <th>Company / Designation</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.EligibleStudents.Any())
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">No active students awaiting conversion.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var student in Model.EligibleStudents)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold text-dark">@student.FullName</div>
+                                            <div class="small text-muted">@student.Email</div>
+                                        </td>
+                                        <td><span class="badge bg-light text-dark border">@student.Department</span></td>
+                                        <td><strong class="text-primary">@student.GraduationYear</strong></td>
+                                        <td>
+                                            <form asp-action="ConvertToAlumni" method="post" id="form-@student.UserId" class="d-flex gap-2">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="userId" value="@student.UserId" />
+                                                <input type="text" name="company" value="@student.CurrentCompany" class="form-control form-control-sm" placeholder="Company" />
+                                                <input type="text" name="designation" value="@student.Designation" class="form-control form-control-sm" placeholder="Designation" />
+                                            </form>
+                                        </td>
+                                        <td class="text-end">
+                                            <button type="submit" form="form-@student.UserId" class="btn btn-sm btn-success rounded-pill px-3 fw-semibold">
+                                                <i class="bi bi-arrow-up-circle me-1"></i> Convert to Alumni
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Historical Transition Logs -->
+        <div class="tab-pane fade" id="history-pane" role="tabpanel">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Alumnus Name</th>
+                                <th>Email</th>
+                                <th>Department</th>
+                                <th>Graduation Year</th>
+                                <th>Transition Date</th>
+                                <th>Processed By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.HistoricalRecords.Any())
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">No historical transition records found.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var history in Model.HistoricalRecords)
+                                {
+                                    <tr>
+                                        <td class="fw-bold text-dark">@history.FullName</td>
+                                        <td class="small text-muted">@history.Email</td>
+                                        <td>@history.Department</td>
+                                        <td>@history.GraduationYear</td>
+                                        <td class="small text-muted">@history.ConvertedToAlumniDate.ToString("MMM dd, yyyy HH:mm")</td>
+                                        <td><span class="badge bg-secondary-subtle text-secondary">@history.ConvertedByAdminEmail</span></td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
