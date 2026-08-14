@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AlmaVault.Controllers
 {
-    [Authorize]
+    //[Authorize]
     public class JobsController : Controller
     {
         private readonly AVDbContext _context;

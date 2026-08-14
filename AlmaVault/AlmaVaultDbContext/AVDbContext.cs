@@ -10,6 +10,7 @@ namespace AlmaVault.Data
 
         // Master Records & Identity
         public DbSet<HistoricalStudent> HistoricalStudents => Set<HistoricalStudent>();
+        public DbSet<MentorshipRequestsDM> MentorshipRequests => Set<MentorshipRequestsDM>();
 
         // Modules
         public DbSet<ContributionLedger> ContributionLedgers => Set<ContributionLedger>();
@@ -33,6 +34,18 @@ namespace AlmaVault.Data
                       .IsRequired(false);
             });
 
+            // Configure MentorshipRequest Dual Foreign Keys
+            modelBuilder.Entity<MentorshipRequestsDM>()
+                .HasOne(m => m.Mentee)
+                .WithMany()
+                .HasForeignKey(m => m.MenteeId)
+                .OnDelete(DeleteBehavior.Restrict); // Prevents circular cascading deletes
+
+            modelBuilder.Entity<MentorshipRequestsDM>()
+                .HasOne(m => m.Mentor)
+                .WithMany()
+                .HasForeignKey(m => m.MentorId)
+                .OnDelete(DeleteBehavior.Restrict);
             // 4. ContributionLedger Configuration (Guid PK & Precision)
             modelBuilder.Entity<ContributionLedger>(entity =>
             {

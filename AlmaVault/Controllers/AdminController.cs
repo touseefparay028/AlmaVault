@@ -45,17 +45,16 @@ public class AdminController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> RegisterAdmin(RegisterAdminViewModel model)
     {
+        // 1. Validate incoming ViewModel
         if (!ModelState.IsValid)
-            return View(model);
-
-       
+            return View("AdminRegister", model);
 
         // 2. Check if user already exists
         var existingUser = await _userManager.FindByEmailAsync(model.Email);
         if (existingUser != null)
         {
             ModelState.AddModelError(nameof(model.Email), "An account with this email address already exists.");
-            return View(model);
+            return View("AdminRegister", model);
         }
 
         // 3. Ensure "Admin" role exists in AspNetRoles table
@@ -65,15 +64,8 @@ public class AdminController : Controller
             await _roleManager.CreateAsync(new IdentityRole(adminRoleName));
         }
 
-        // 4. Create HistoricalStudent record for admin tracking
+        // 4. Generate Admin Identifier
         var adminRollNumber = $"ADM-{Guid.NewGuid().ToString()[..8].ToUpper()}";
-        var adminHistoricalRecord = new HistoricalStudent
-        {
-            StudentIdNumber = adminRollNumber,
-            FullName = model.FullName,
-            Department = model.Department,
-            GraduationYear = DateTime.UtcNow.Year
-        };
 
         // 5. Instantiate ApplicationUser
         var adminUser = new ApplicationUser
@@ -90,9 +82,6 @@ public class AdminController : Controller
         using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
-            _context.HistoricalStudents.Add(adminHistoricalRecord);
-            await _context.SaveChangesAsync();
-
             // Create Identity User
             var createResult = await _userManager.CreateAsync(adminUser, model.Password);
             if (!createResult.Succeeded)
@@ -102,7 +91,7 @@ public class AdminController : Controller
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
-                return View(model);
+                return View("AdminRegister", model);
             }
 
             // Assign "Admin" Role in AspNetUserRoles
@@ -114,7 +103,7 @@ public class AdminController : Controller
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
-                return View(model);
+                return View("AdminRegister", model);
             }
 
             await transaction.CommitAsync();
@@ -126,7 +115,7 @@ public class AdminController : Controller
         {
             await transaction.RollbackAsync();
             ModelState.AddModelError(string.Empty, $"An unexpected error occurred: {ex.Message}");
-            return View(model);
+            return View("AdminRegister", model);
         }
     }
     [HttpGet]
@@ -291,5 +280,149 @@ public class AdminController : Controller
 
         TempData["SuccessMessage"] = $"Successfully converted {user.FullName} to Alumni status!";
         return RedirectToAction(nameof(Transitions));
+    }
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ApproveAlumni(string id)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            TempData["ErrorMessage"] = "User request not found.";
+            return RedirectToAction(nameof(AdminDashboard));
+        }
+
+        // Update verification flag
+        user.IsVerified = true;
+        var result = await _userManager.UpdateAsync(user);
+
+        if (result.Succeeded)
+        {
+            // Ensure user is assigned the Alumni role
+            if (!await _userManager.IsInRoleAsync(user, "Alumni"))
+            {
+                await _userManager.AddToRoleAsync(user, "Alumni");
+            }
+
+            TempData["SuccessMessage"] = $"Alumni registration for {user.FullName} approved successfully.";
+        }
+        else
+        {
+            TempData["ErrorMessage"] = "Failed to approve alumni registration.";
+        }
+
+        return RedirectToAction(nameof(AdminDashboard));
+    }
+
+    // POST: /Admin/RejectAlumni
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RejectAlumni(string id)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            TempData["ErrorMessage"] = "User request not found.";
+            return RedirectToAction(nameof(AdminDashboard));
+        }
+
+        // Option 1: Remove unverified account upon rejection
+        var result = await _userManager.DeleteAsync(user);
+
+        if (result.Succeeded)
+        {
+            TempData["SuccessMessage"] = $"Registration request for {user.FullName} was rejected and removed.";
+        }
+        else
+        {
+            TempData["ErrorMessage"] = "Failed to reject application.";
+        }
+
+        return RedirectToAction(nameof(AdminDashboard));
+    }
+
+    // POST: /Admin/ToggleUserStatus
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleUserStatus(string id)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            TempData["ErrorMessage"] = "User not found.";
+            return RedirectToAction(nameof(AdminDashboard));
+        }
+
+        // Toggle active/suspended state via Identity Lockout
+        if (await _userManager.IsLockedOutAsync(user))
+        {
+            await _userManager.SetLockoutEndDateAsync(user, null);
+            TempData["SuccessMessage"] = $"User {user.FullName} has been reactivated.";
+        }
+        else
+        {
+            await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.MaxValue);
+            TempData["SuccessMessage"] = $"User {user.FullName} has been suspended.";
+        }
+
+        return RedirectToAction(nameof(AdminDashboard));
+    }
+
+    // POST: /Admin/UpdateUserRole
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateUserRole(string id, string newRole)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null || string.IsNullOrEmpty(newRole))
+        {
+            TempData["ErrorMessage"] = "Invalid user or role selection.";
+            return RedirectToAction(nameof(AdminDashboard));
+        }
+
+        if (!await _roleManager.RoleExistsAsync(newRole))
+        {
+            TempData["ErrorMessage"] = "Selected role does not exist.";
+            return RedirectToAction(nameof(AdminDashboard));
+        }
+
+        var currentRoles = await _userManager.GetRolesAsync(user);
+        await _userManager.RemoveFromRolesAsync(user, currentRoles);
+        await _userManager.AddToRoleAsync(user, newRole);
+
+        TempData["SuccessMessage"] = $"Role for {user.FullName} updated to {newRole}.";
+        return RedirectToAction(nameof(AdminDashboard));
+    }
+
+    // POST: /Admin/ApproveMentorship
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ApproveMentorship(int id)
+    {
+        var request = await _context.MentorshipRequests.FindAsync(id);
+        if (request != null)
+        {
+            request.Status = "Approved";
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Mentorship request approved.";
+        }
+
+        return RedirectToAction(nameof(AdminDashboard));
+    }
+
+    // POST: /Admin/RejectMentorship
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RejectMentorship(int id)
+    {
+        var request = await _context.MentorshipRequests.FindAsync(id);
+        if (request != null)
+        {
+            request.Status = "Rejected";
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Mentorship request rejected.";
+        }
+
+        return RedirectToAction(nameof(AdminDashboard));
     }
 }

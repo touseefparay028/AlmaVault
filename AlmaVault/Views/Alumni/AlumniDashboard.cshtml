@@ -1,27 +1,59 @@
-﻿@model AlmaVault.Models.Domains.ApplicationUser
+﻿@model AlmaVault.Models.ViewModel.MentorshipRequestsVM.MentorCardViewModel
 
 @{
     ViewData["Title"] = "Alumni Dashboard";
-    var directory = ViewBag.DirectoryEntry as AlmaVault.Models.Domains.AlumniDirectoryDM;
+    var mentorshipRequests = ViewBag.MentorshipRequests as List<AlmaVault.Models.ViewModel.MentorshipRequestsVM.MentorshipRequestDisplayViewModel> ?? new List<AlmaVault.Models.ViewModel.MentorshipRequestsVM.MentorshipRequestDisplayViewModel>();
+    var activeJobsCount = ViewBag.ActiveJobsCount ?? 0;
+    var pendingMentorshipCount = mentorshipRequests.Count(r => r.Status == "Pending");
 }
 
 <div class="container py-4">
+    <!-- Success / Error Alert Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
     <!-- Header / Welcome Banner -->
     <div class="card border-0 bg-dark text-white rounded-4 p-4 mb-4 shadow">
         <div class="row align-items-center">
             <div class="col-md-8">
-                <span class="badge bg-primary-subtle text-primary fw-semibold px-3 py-1 rounded-pill mb-2">
-                    <i class="bi bi-patch-check-fill me-1"></i> Verified Alumnus
-                </span>
+                @if (Model.IsVerified)
+                {
+                    <span class="badge bg-primary-subtle text-primary fw-semibold px-3 py-1 rounded-pill mb-2">
+                        <i class="bi bi-patch-check-fill me-1"></i> Verified Alumnus
+                    </span>
+                }
+                else
+                {
+                    <span class="badge bg-warning-subtle text-warning fw-semibold px-3 py-1 rounded-pill mb-2">
+                        <i class="bi bi-clock-history me-1"></i> Verification Pending
+                    </span>
+                }
                 <h2 class="fw-bold mb-1">Welcome back, @Model.FullName!</h2>
                 <p class="text-white-50 mb-0">
-                    @Model.Designation at <strong class="text-white">@Model.CurrentCompany</strong> &bull; Class of @Model.GraduationYear
+                    @(string.IsNullOrEmpty(Model.Designation) ? "Alumnus" : Model.Designation)
+                    @(string.IsNullOrEmpty(Model.CurrentCompany) ? "" : $"at {Model.CurrentCompany}")
+                    &bull; Class of @Model.GraduationYear
                 </p>
             </div>
             <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                <a asp-controller="AlumniDirectoryDM" asp-action="Index" class="btn btn-outline-light rounded-pill px-4">
-                    <i class="bi bi-search me-1"></i> Explore Network
+                <a asp-controller="AlumniDirectoryDM" asp-action="Index" class="btn btn-outline-light rounded-pill px-4 me-2">
+                    <i class="bi bi-search me-1"></i> Directory
                 </a>
+                <button type="button" class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                    <i class="bi bi-pencil-square me-1"></i> Edit Profile
+                </button>
             </div>
         </div>
     </div>
@@ -35,7 +67,7 @@
                 </div>
                 <div>
                     <h6 class="text-muted small mb-0 fw-semibold">Job Postings</h6>
-                    <h4 class="fw-bold mb-0">0 Active</h4>
+                    <h4 class="fw-bold mb-0">@activeJobsCount Active</h4>
                 </div>
             </div>
         </div>
@@ -46,7 +78,7 @@
                 </div>
                 <div>
                     <h6 class="text-muted small mb-0 fw-semibold">Mentorship Requests</h6>
-                    <h4 class="fw-bold mb-0">0 Pending</h4>
+                    <h4 class="fw-bold mb-0">@pendingMentorshipCount Pending</h4>
                 </div>
             </div>
         </div>
@@ -57,31 +89,122 @@
                 </div>
                 <div>
                     <h6 class="text-muted small mb-0 fw-semibold">Department</h6>
-                    <h5 class="fw-bold mb-0">@Model.Department</h5>
+                    <h5 class="fw-bold mb-0">@(string.IsNullOrEmpty(Model.Department) ? "Not Specified" : Model.Department)</h5>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Actions & Profile Info -->
+    <!-- Main Workspace -->
     <div class="row g-4">
-        <!-- Quick Actions -->
         <div class="col-lg-8">
+            <!-- Mentorship & Guidance Center -->
             <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
-                <h5 class="fw-bold mb-3"><i class="bi bi-lightning-charge text-warning me-2"></i>Quick Actions</h5>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-person-workspace text-primary me-2"></i>Mentorship Queue</h5>
+
+                    <!-- Mentorship Availability Switch -->
+                    <form asp-action="ToggleMentorship" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="mentorshipToggle"
+                                   @(Model.IsAvailableForMentorship ? "checked" : "") onchange="this.form.submit()">
+                            <label class="form-check-label small fw-semibold" for="mentorshipToggle">
+                                @(Model.IsAvailableForMentorship ? "Available for Mentorship" : "Unavailable")
+                            </label>
+                        </div>
+                    </form>
+                </div>
+
+                @if (!mentorshipRequests.Any())
+                {
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-inbox fs-1 d-block text-secondary mb-2"></i>
+                        <p class="mb-0">No mentorship requests in your queue right now.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Mentee Student</th>
+                                    <th>Topic / Title</th>
+                                    <th>Requested</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var req in mentorshipRequests)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold">@(req.MenteeName?? "Student")</div>
+                                            <span class="small text-muted">@(req.MenteeEmail)</span>
+                                        </td>
+                                        <td>@req.Title</td>
+                                        <td>@req.RequestedDate.ToString("MMM dd, yyyy")</td>
+                                        <td>
+                                            @if (req.Status == "Approved")
+                                            {
+                                                <span class="badge bg-success-subtle text-success">Approved</span>
+                                            }
+                                            else if (req.Status == "Rejected")
+                                            {
+                                                <span class="badge bg-danger-subtle text-danger">Rejected</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-warning-subtle text-warning">Pending</span>
+                                            }
+                                        </td>
+                                        <td class="text-end">
+                                            @if (req.Status == "Pending")
+                                            {
+                                                <form asp-action="RespondMentorship" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="requestId" value="@req.Id" />
+                                                    <button type="submit" name="status" value="Approved" class="btn btn-sm btn-success rounded-pill px-3">Accept</button>
+                                                    <button type="submit" name="status" value="Rejected" class="btn btn-sm btn-outline-danger rounded-pill px-3">Decline</button>
+                                                </form>
+                                            }
+                                            else if (req.Status == "Approved")
+                                            {
+                                                <a href="mailto:@req.MenteeEmail" class="btn btn-sm btn-outline-primary rounded-pill">
+                                                    <i class="bi bi-envelope me-1"></i> Contact
+                                                </a>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+
+            <!-- Quick Action Hub -->
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-lightning-charge text-warning me-2"></i>Career Facilitation Hub</h5>
                 <div class="row g-3">
                     <div class="col-md-6">
                         <div class="border rounded-3 p-3 hover-shadow">
-                            <h6 class="fw-bold mb-1"><i class="bi bi-plus-circle text-primary me-2"></i>Post a Job / Internship</h6>
-                            <p class="text-muted small mb-3">Share career opportunities with current students and fellow alumni.</p>
-                            <a href="#" class="btn btn-sm btn-outline-primary rounded-pill">Create Post</a>
+                            <h6 class="fw-bold mb-1"><i class="bi bi-plus-circle text-primary me-2"></i>Post Job / Internship</h6>
+                            <p class="text-muted small mb-3">Share opportunities or referrals from your current workplace with students.</p>
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" data-bs-toggle="modal" data-bs-target="#postJobModal">
+                                Create Posting
+                            </button>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="border rounded-3 p-3 hover-shadow">
-                            <h6 class="fw-bold mb-1"><i class="bi bi-person-lines-fill text-success me-2"></i>Directory Profile</h6>
-                            <p class="text-muted small mb-3">Keep your location, company, and contact visibility up-to-date.</p>
-                            <a href="#" class="btn btn-sm btn-outline-success rounded-pill">Update Profile</a>
+                            <h6 class="fw-bold mb-1"><i class="bi bi-shield-check text-success me-2"></i>Platform Ethics</h6>
+                            <p class="text-muted small mb-3">Maintain authentic professional information and respect student privacy standards.</p>
+                            <button type="button" class="btn btn-sm btn-outline-success rounded-pill" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                                Review Profile
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -93,24 +216,129 @@
             <div class="card border-0 shadow-sm rounded-4 p-4">
                 <h5 class="fw-bold mb-3"><i class="bi bi-person-vcard me-2"></i>Profile Details</h5>
                 <ul class="list-unstyled mb-0">
-                    <li class="mb-2">
+                    <li class="mb-3">
                         <strong class="small text-muted d-block">Full Name</strong>
                         <span>@Model.FullName</span>
                     </li>
-                    <li class="mb-2">
-                        <strong class="small text-muted d-block">Email</strong>
-                        <span>@Model.Email</span>
+                    <li class="mb-3">
+                        <strong class="small text-muted d-block">Email Address</strong>
+                        <span>@Model.</span>
                     </li>
-                    <li class="mb-2">
-                        <strong class="small text-muted d-block">University Roll Number</strong>
-                        <span>@Model.RollNumber</span>
+                    <li class="mb-3">
+                        <strong class="small text-muted d-block">Current Position</strong>
+                        <span>@(string.IsNullOrEmpty(Model.Designation) ? "Not specified" : Model.Designation) at @(string.IsNullOrEmpty(Model.CurrentCompany) ? "N/A" : Model.CurrentCompany)</span>
                     </li>
-                    <li class="mb-2">
-                        <strong class="small text-muted d-block">Current Role</strong>
-                        <span>@Model.Designation at @Model.CurrentCompany</span>
+                    <li class="mb-3">
+                        <strong class="small text-muted d-block">LinkedIn Profile</strong>
+                        @if (!string.IsNullOrEmpty(Model.LinkedInUrl))
+                        {
+                            <a href="@Model.LinkedInUrl" target="_blank" class="text-decoration-none">
+                                <i class="bi bi-linkedin text-primary me-1"></i> View LinkedIn
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Not provided</span>
+                        }
                     </li>
                 </ul>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 1: Edit Profile Showcase -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <form asp-action="UpdateProfile" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" ideditProfileModalLabel>Update Professional Profile</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Current Employer / Company</label>
+                            <input type="text" name="CurrentCompany" value="@Model.CurrentCompany" class="form-control" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Job Title / Designation</label>
+                            <input type="text" name="Designation" value="@Model.Designation" class="form-control" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">LinkedIn Profile URL</label>
+                            <input type="url" name="LinkedInUrl" value="@Model.LinkedInUrl" class="form-control" placeholder="https://linkedin.com/in/username" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Department / Major</label>
+                            <input type="text" name="Department" value="@Model.Department" class="form-control" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Upload Degree / Verification Proof (PDF or Image)</label>
+                            <input type="file" name="VerificationProof" class="form-control" accept=".pdf,.jpg,.jpeg,.png" />
+                            <small class="text-muted">Re-upload only if updating verification documentation for administration review.</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 2: Post Job / Internship Opportunity -->
+<div class="modal fade" id="postJobModal" tabindex="-1" aria-labelledby="postJobModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <form asp-action="PostJobOpportunity" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="postJobModalLabel">Post Career Opportunity</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">Job Title</label>
+                            <input type="text" name="JobTitle" class="form-control" placeholder="e.g. Software Engineer / Intern" required />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Employment Type</label>
+                            <select name="JobType" class="form-select" required>
+                                <option value="Full-Time">Full-Time</option>
+                                <option value="Internship">Internship</option>
+                                <option value="Part-Time">Part-Time</option>
+                                <option value="Referral">Referral Opportunity</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Company Name</label>
+                            <input type="text" name="Company" value="@Model.CurrentCompany" class="form-control" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Location / Remote</label>
+                            <input type="text" name="Location" class="form-control" placeholder="e.g. New York / Remote" required />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Application Link or Referral Email</label>
+                            <input type="text" name="ApplicationUrl" class="form-control" placeholder="https://careers.company.com/job/123 or mailto:referral@company.com" required />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Description & Requirements</label>
+                            <textarea name="Description" class="form-control" rows="4" placeholder="Detail skills needed, eligibility criteria, and instructions..." required></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">Publish Post</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

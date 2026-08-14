@@ -1,0 +1,92 @@
+﻿@model IEnumerable<AlmaVault.Models.ViewModel.MentorshipRequestsVM.MentorshipRequestDisplayViewModel>
+
+@{
+    ViewData["Title"] = "Mentorship Requests";
+}
+
+<div class="container py-4">
+    <h2 class="fw-bold mb-1">Mentorship Requests</h2>
+    <p class="text-muted mb-4">Manage requests from students seeking professional guidance.</p>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-3 mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm rounded-4 p-3">
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                <p class="mb-0">You have no mentorship requests in your queue.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student</th>
+                            <th>Topic & Note</th>
+                            <th>Requested On</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">@item.MenteeName</div>
+                                    <div class="small text-muted">@item.MenteeEmail</div>
+                                    <div class="small text-secondary">@item.MenteeDepartment</div>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">@item.Title</div>
+                                    <div class="small text-muted">@(string.IsNullOrEmpty(item.Note) ? "No additional details." : item.Note)</div>
+                                </td>
+                                <td>@item.RequestedDate.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    @if (item.Status == "Approved")
+                                    {
+                                        <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill">Approved</span>
+                                    }
+                                    else if (item.Status == "Rejected")
+                                    {
+                                        <span class="badge bg-danger-subtle text-danger px-3 py-2 rounded-pill">Rejected</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning-subtle text-warning px-3 py-2 rounded-pill">Pending</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    @if (item.Status == "Pending")
+                                    {
+                                        <form asp-action="Respond" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="requestId" value="@item.Id" />
+                                            <button type="submit" name="status" value="Approved" class="btn btn-sm btn-success rounded-pill px-3">Accept</button>
+                                            <button type="submit" name="status" value="Rejected" class="btn btn-sm btn-outline-danger rounded-pill px-3">Decline</button>
+                                        </form>
+                                    }
+                                    else if (item.Status == "Approved")
+                                    {
+                                        <a href="mailto:@item.MenteeEmail" class="btn btn-sm btn-outline-primary rounded-pill">
+                                            <i class="bi bi-envelope me-1"></i> Contact Student
+                                        </a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

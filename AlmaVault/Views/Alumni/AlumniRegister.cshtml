@@ -6,90 +6,180 @@
 
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-7 col-lg-6">
+        <div class="col-lg-8 col-xl-7">
             <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-                <div class="card-header bg-dark text-white text-center py-4 border-0">
-                    <div class="brand-icon bg-white text-dark mx-auto mb-2 shadow-sm d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border-radius: 12px; font-size: 1.5rem;">
-                        <i class="bi bi-award-fill"></i>
+                <!-- Card Header -->
+                <div class="card-header bg-dark text-white text-center py-4 border-0 position-relative">
+                    <div class="brand-icon bg-white text-dark mx-auto mb-2 shadow-sm d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; border-radius: 14px; font-size: 1.6rem;">
+                        <i class="bi bi-award-fill text-primary"></i>
                     </div>
-                    <h4 class="fw-bold mb-0">Alumni Registration</h4>
-                    <p class="small text-white-50 mb-0">Verify your academic record and join the AlmaVault alumni network</p>
+                    <h4 class="fw-bold mb-1">Alumni Registration</h4>
+                    <p class="small text-white-50 mb-0">Verify your academic background & join the AlmaVault network</p>
                 </div>
 
-                <div class="card-body p-4">
-                    <form asp-controller="Alumni" asp-action="RegisterAlumni" method="post">
+                <!-- Form Body -->
+                <div class="card-body p-4 p-md-5">
+                    <form asp-controller="Alumni" asp-action="RegisterAlumni" method="post" enctype="multipart/form-data">
                         @Html.AntiForgeryToken()
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger p-2 small mb-3"></div>
 
-                        <div class="row g-3">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger p-2 small mb-4 rounded-3"></div>
+
+                        <!-- Section: Personal & Academic Info -->
+                        <div class="d-flex align-items-center gap-2 mb-3 pb-1 border-bottom">
+                            <i class="bi bi-person-vcard text-primary fs-5"></i>
+                            <h6 class="fw-bold mb-0 text-dark">Academic & Profile Information</h6>
+                        </div>
+
+                        <div class="row g-3 mb-4">
                             <!-- Full Name -->
                             <div class="col-12">
-                                <label asp-for="FullName" class="form-label small fw-semibold text-dark"></label>
-                                <input asp-for="FullName" class="form-control bg-light" placeholder="John Doe" />
+                                <label asp-for="FullName" class="form-label small fw-semibold text-dark">Full Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-muted"></i></span>
+                                    <input asp-for="FullName" class="form-control bg-light border-start-0" placeholder="e.g. John Doe" autofocus />
+                                </div>
                                 <span asp-validation-for="FullName" class="text-danger small"></span>
                             </div>
 
                             <!-- Email -->
                             <div class="col-md-6">
-                                <label asp-for="Email" class="form-label small fw-semibold text-dark"></label>
-                                <input asp-for="Email" class="form-control bg-light" placeholder="alumni@company.com" />
+                                <label asp-for="Email" class="form-label small fw-semibold text-dark">Email Address</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-envelope text-muted"></i></span>
+                                    <input asp-for="Email" class="form-control bg-light border-start-0" placeholder="alumni@company.com" />
+                                </div>
                                 <span asp-validation-for="Email" class="text-danger small"></span>
                             </div>
 
                             <!-- Roll Number -->
                             <div class="col-md-6">
-                                <label asp-for="RollNumber" class="form-label small fw-semibold text-dark"></label>
-                                <input asp-for="RollNumber" class="form-control bg-light" placeholder="e.g., CS202001" />
+                                <label asp-for="RollNumber" class="form-label small fw-semibold text-dark">Roll / Student ID Number</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-card-heading text-muted"></i></span>
+                                    <input asp-for="RollNumber" class="form-control bg-light border-start-0" placeholder="e.g. CS202001" />
+                                </div>
                                 <span asp-validation-for="RollNumber" class="text-danger small"></span>
                             </div>
 
-                            <!-- Graduation Year -->
-                            <div class="col-12">
-                                <label asp-for="GraduationYear" class="form-label small fw-semibold text-dark"></label>
-                                <input asp-for="GraduationYear" type="number" class="form-control bg-light" placeholder="e.g., 2024" />
-                                <span asp-validation-for="GraduationYear" class="text-danger small"></span>
+                            <!-- Department -->
+                            <div class="col-md-6">
+                                <label asp-for="Department" class="form-label small fw-semibold text-dark">Department / Major</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-mortarboard text-muted"></i></span>
+                                    <select asp-for="Department" class="form-select bg-light border-start-0">
+                                        <option value="">Select Department</option>
+                                        <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+                                        <option value="Information Technology">Information Technology</option>
+                                        <option value="Electrical Engineering">Electrical Engineering</option>
+                                        <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                        <option value="Civil Engineering">Civil Engineering</option>
+                                        <option value="Business Administration">Business Administration</option>
+                                    </select>
+                                </div>
+                                <span asp-validation-for="Department" class="text-danger small"></span>
                             </div>
 
+                            <!-- Graduation Year -->
+                            <div class="col-md-6">
+                                <label asp-for="GraduationYear" class="form-label small fw-semibold text-dark">Graduation Year</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-calendar-event text-muted"></i></span>
+                                    <input asp-for="GraduationYear" type="number" class="form-control bg-light border-start-0" placeholder="e.g. 2024" />
+                                </div>
+                                <span asp-validation-for="GraduationYear" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <!-- Section: Professional Info -->
+                        <div class="d-flex align-items-center gap-2 mb-3 pb-1 border-bottom">
+                            <i class="bi bi-briefcase text-primary fs-5"></i>
+                            <h6 class="fw-bold mb-0 text-dark">Current Professional Status</h6>
+                        </div>
+
+                        <div class="row g-3 mb-4">
                             <!-- Current Company -->
                             <div class="col-md-6">
-                                <label asp-for="CurrentCompany" class="form-label small fw-semibold text-dark"></label>
-                                <input asp-for="CurrentCompany" class="form-control bg-light" placeholder="Microsoft, Google, etc." />
+                                <label asp-for="CurrentCompany" class="form-label small fw-semibold text-dark">Current Company / Organization</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-building text-muted"></i></span>
+                                    <input asp-for="CurrentCompany" class="form-control bg-light border-start-0" placeholder="e.g. Microsoft, Google" />
+                                </div>
                                 <span asp-validation-for="CurrentCompany" class="text-danger small"></span>
                             </div>
 
                             <!-- Designation -->
                             <div class="col-md-6">
-                                <label asp-for="Designation" class="form-label small fw-semibold text-dark"></label>
-                                <input asp-for="Designation" class="form-control bg-light" placeholder="Software Engineer" />
+                                <label asp-for="Designation" class="form-label small fw-semibold text-dark">Designation / Role</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-person-badge text-muted"></i></span>
+                                    <input asp-for="Designation" class="form-control bg-light border-start-0" placeholder="e.g. Senior Software Engineer" />
+                                </div>
                                 <span asp-validation-for="Designation" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Location -->
+                            <div class="col-12">
+                                <label asp-for="Location" class="form-label small fw-semibold text-dark">Current Location</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-geo-alt text-muted"></i></span>
+                                    <input asp-for="Location" class="form-control bg-light border-start-0" placeholder="e.g. Bengaluru, India or New York, USA" />
+                                </div>
+                                <span asp-validation-for="Location" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <!-- Section: Verification & Credentials -->
+                        <div class="d-flex align-items-center gap-2 mb-3 pb-1 border-bottom">
+                            <i class="bi bi-shield-check text-primary fs-5"></i>
+                            <h6 class="fw-bold mb-0 text-dark">Verification & Security</h6>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <!-- Proof Document Upload -->
+                            <div class="col-12">
+                                <label asp-for="ProofDocument" class="form-label small fw-semibold text-dark">Degree / ID Proof Document</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-file-earmark-arrow-up text-muted"></i></span>
+                                    <input asp-for="ProofDocument" type="file" class="form-control bg-light border-start-0" accept=".pdf,.png,.jpg,.jpeg" />
+                                </div>
+                                <div class="form-text extra-small text-muted">Upload a clear copy of your Degree Certificate, Provisional Marksheet, or Alumni ID (PDF/JPG, max 5MB).</div>
+                                <span asp-validation-for="ProofDocument" class="text-danger small"></span>
                             </div>
 
                             <!-- Password -->
                             <div class="col-md-6">
-                                <label asp-for="Password" class="form-label small fw-semibold text-dark"></label>
-                                <input asp-for="Password" class="form-control bg-light" type="password" />
+                                <label asp-for="Password" class="form-label small fw-semibold text-dark">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock text-muted"></i></span>
+                                    <input asp-for="Password" class="form-control bg-light border-start-0" type="password" placeholder="••••••••" />
+                                </div>
                                 <span asp-validation-for="Password" class="text-danger small"></span>
                             </div>
 
                             <!-- Confirm Password -->
                             <div class="col-md-6">
-                                <label asp-for="ConfirmPassword" class="form-label small fw-semibold text-dark"></label>
-                                <input asp-for="ConfirmPassword" class="form-control bg-light" type="password" />
+                                <label asp-for="ConfirmPassword" class="form-label small fw-semibold text-dark">Confirm Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-shield-lock text-muted"></i></span>
+                                    <input asp-for="ConfirmPassword" class="form-control bg-light border-start-0" type="password" placeholder="••••••••" />
+                                </div>
                                 <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
                             </div>
                         </div>
 
+                        <!-- Submit Button -->
                         <div class="d-grid mt-4">
-                            <button type="submit" class="btn btn-dark rounded-pill py-2 fw-bold shadow-sm">
+                            <button type="submit" class="btn btn-dark rounded-pill py-2.5 fw-bold shadow-sm">
                                 Register as Alumnus <i class="bi bi-arrow-right ms-1"></i>
                             </button>
                         </div>
                     </form>
-                    <!-- Footer Link -->
-                    <div class="card-footer bg-light text-center py-3 border-0">
-                        <span class="small text-muted">Already have an account?</span>
-                        <a asp-action="AlumniLogin" asp-controller="Alumni" class="small fw-bold text-primary text-decoration-none ms-1">Login Here</a>
-                    </div>
+                </div>
+
+                <!-- Footer Link -->
+                <div class="card-footer bg-light text-center py-3 border-0">
+                    <span class="small text-muted">Already registered as an Alumnus?</span>
+                    <a asp-action="Login" asp-controller="Alumni" class="small fw-bold text-primary text-decoration-none ms-1">Login Here</a>
                 </div>
             </div>
         </div>
