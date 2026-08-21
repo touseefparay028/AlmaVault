@@ -57,12 +57,12 @@
                     Department: <strong class="text-light">@(Model.Department ?? "Computer Science")</strong> | Roll No: <strong class="text-light">@Model.RollNumber</strong>
                 </p>
                 <div class="d-flex flex-wrap gap-2">
-                    <a href="#alumni-section" class="btn btn-primary rounded-pill px-4 fw-semibold shadow-sm">
+                    <a asp-action="Browse" asp-controller="Mentorship" class="btn btn-primary rounded-pill px-4 fw-semibold shadow-sm">
                         <i class="bi bi-search me-1"></i> Find Alumni Mentors
                     </a>
-                    <a href="#jobs-section" class="btn btn-outline-light rounded-pill px-4 fw-semibold">
+                    @* <a href="#jobs-section" class="btn btn-outline-light rounded-pill px-4 fw-semibold">
                         <i class="bi bi-briefcase me-1"></i> View Referral Board
-                    </a>
+                    </a> *@
                 </div>
             </div>
             <div class="col-lg-4 d-none d-lg-block text-end">
@@ -143,72 +143,74 @@
                         <h5 class="fw-bold mb-0 text-dark">Verified Alumni Network</h5>
                         <small class="text-muted">Connect directly with graduates working in top industries.</small>
                     </div>
-                    <a asp-action="AlumniDirectory" class="btn btn-sm btn-outline-primary rounded-pill fw-semibold">
+                    <a asp-action="Browse" asp-controller="Mentorship" class="btn btn-sm btn-outline-primary rounded-pill fw-semibold">
                         View All Directory <i class="bi bi-arrow-right ms-1"></i>
                     </a>
                 </div>
 
                 <!-- Search & Filters -->
                 <div class="row g-2 mb-3">
-                    <div class="col-md-5">
+                    <div class="col-md-9">
                         <div class="input-group input-group-sm">
                             <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
-                            <input type="text" class="form-control bg-light border-start-0" placeholder="Search by name, company, or role...">
+                            <input type="text" id="alumniSearchInput" class="form-control bg-light border-start-0" placeholder="Search by name, company, or role...">
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <select class="form-select form-select-sm bg-light">
-                            <option selected>All Departments</option>
-                            <option>Computer Science</option>
-                            <option>Information Technology</option>
-                            <option>Electronics & Comm.</option>
-                            <option>Mechanical Eng.</option>
-                        </select>
-                    </div>
                     <div class="col-md-3">
-                        <button class="btn btn-primary btn-sm w-100 rounded-3 fw-semibold">Filter</button>
+                        <button type="button" class="btn btn-primary btn-sm w-100 rounded-3 fw-semibold">Filter</button>
                     </div>
                 </div>
 
                 <!-- Featured Alumni List -->
-                <div class="list-group list-group-flush border-top">
+                <div class="list-group list-group-flush border-top" id="alumniContainer">
+                    @{
+                        var verifiedAlumni = ViewBag.VerifiedAlumni as List<AlmaVault.Models.Domains.ApplicationUser>;
+                    }
 
-                    <!-- Alumni Item 1 -->
-                    <div class="list-group-item px-0 py-3 d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="avatar-circle">
-                                <span>AK</span>
+                    @if (verifiedAlumni != null && verifiedAlumni.Any())
+                    {
+                        @foreach (var alumni in verifiedAlumni)
+                        {
+                            var initials = !string.IsNullOrWhiteSpace(alumni.FullName)
+                            ? string.Concat(alumni.FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(n => n[0])).ToUpper()
+                            : "AL";
+
+                            <div class="list-group-item px-0 py-3 d-flex align-items-center justify-content-between alumni-card">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar-circle">
+                                        <span>@initials</span>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-dark alumni-name">@alumni.FullName</h6>
+                                        <p class="small text-muted mb-0 alumni-info">
+                                            @(string.IsNullOrEmpty(alumni.Designation) ? "Alumni" : alumni.Designation)
+                                            @(!string.IsNullOrEmpty(alumni.CurrentCompany) ? $" at {alumni.CurrentCompany}" : "")
+                                            | Batch @alumni.GraduationYear
+                                        </p>
+                                        @if (!string.IsNullOrEmpty(alumni.Department))
+                                        {
+                                            <span class="badge bg-light text-dark border me-1">@alumni.Department</span>
+                                        }
+                                        <span class="badge bg-success-subtle text-success">Verified Alumni</span>
+                                    </div>
+                                </div>
+                                @* <button class="btn btn-outline-primary btn-sm rounded-pill fw-semibold px-3"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#connectModal"
+                                        data-alumni-id="@alumni.Id"
+                                        data-alumni-name="@alumni.FullName">
+                                    <i class="bi bi-send me-1"></i> Connect
+                                </button> *@
                             </div>
-                            <div>
-                                <h6 class="fw-bold mb-0 text-dark">Aamir Khan</h6>
-                                <p class="small text-muted mb-0">Software Engineer at Microsoft | Batch 2023</p>
-                                <span class="badge bg-light text-dark border me-1">CSE</span>
-                                <span class="badge bg-success-subtle text-success">Open for Mentorship</span>
-                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-people fs-3 d-block mb-2"></i>
+                            No verified alumni found at the moment.
                         </div>
-                        <button class="btn btn-outline-primary btn-sm rounded-pill fw-semibold px-3" data-bs-toggle="modal" data-bs-target="#connectModal" data-alumni="Aamir Khan">
-                            <i class="bi bi-send me-1"></i> Connect
-                        </button>
-                    </div>
-
-                    <!-- Alumni Item 2 -->
-                    <div class="list-group-item px-0 py-3 d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="avatar-circle bg-info-subtle text-info">
-                                <span>SR</span>
-                            </div>
-                            <div>
-                                <h6 class="fw-bold mb-0 text-dark">Saba Rashid</h6>
-                                <p class="small text-muted mb-0">Product Manager at Amazon | Batch 2021</p>
-                                <span class="badge bg-light text-dark border me-1">IT</span>
-                                <span class="badge bg-primary-subtle text-primary">Referrals Offered</span>
-                            </div>
-                        </div>
-                        <button class="btn btn-outline-primary btn-sm rounded-pill fw-semibold px-3" data-bs-toggle="modal" data-bs-target="#connectModal" data-alumni="Saba Rashid">
-                            <i class="bi bi-send me-1"></i> Connect
-                        </button>
-                    </div>
-
+                    }
                 </div>
             </div>
 

@@ -7,15 +7,18 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using QuestPDF.Infrastructure;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-
+QuestPDF.Settings.License = LicenseType.Community;
 // 1. Add MVC Controllers and Views
 // =========================================================================
 builder.Services.AddControllersWithViews();
 builder.Services.AddEndpointsApiExplorer();
-
+builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<IPaymentService, StripePaymentService>();
+builder.Services.AddScoped<ITaxReceiptService, TaxReceiptService>();
 // 2. Configure Swagger Generation with JWT Support
 // =========================================================================
 builder.Services.AddSwaggerGen(c =>
@@ -57,7 +60,7 @@ builder.Services.AddDbContext<AVDbContext>(options =>
 
 // 4. ASP.NET Core Identity Configuration
 // =========================================================================
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
 {
     // Password settings
     options.Password.RequireDigit = true;

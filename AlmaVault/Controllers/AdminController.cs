@@ -14,14 +14,14 @@ namespace AlmaVault.Controllers;
 public class AdminController : Controller
 {
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly AVDbContext _context;
     private readonly IConfiguration _configuration;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly ITokenService _tokenService;
     public AdminController(
         UserManager<ApplicationUser> userManager,
-        RoleManager<IdentityRole> roleManager,
+        RoleManager<ApplicationRole> roleManager,
         AVDbContext context,
         IConfiguration configuration, SignInManager<ApplicationUser> signInManager, ITokenService tokenService)
     {
@@ -61,7 +61,7 @@ public class AdminController : Controller
         var adminRoleName = UserRole.Admin.ToString();
         if (!await _roleManager.RoleExistsAsync(adminRoleName))
         {
-            await _roleManager.CreateAsync(new IdentityRole(adminRoleName));
+            await _roleManager.CreateAsync(new ApplicationRole { Name = adminRoleName });
         }
 
         // 4. Generate Admin Identifier
@@ -207,16 +207,20 @@ public class AdminController : Controller
         // 1. Get all users currently in the "Student" role
         var studentUsers = await _userManager.GetUsersInRoleAsync("Student");
 
-        var eligibleStudents = studentUsers.Select(s => new StudentTransitionVM
-        {
-            UserId = s.Id,
-            FullName = s.FullName ?? "N/A",
-            Email = s.Email ?? "N/A",
-            Department = s.Department ?? "N/A",
-            GraduationYear = s.GraduationYear,
-            CurrentCompany = s.CurrentCompany ?? "",
-            Designation = s.Designation ?? ""
-        }).ToList();
+        DateTime cutoffDate = DateTime.UtcNow.AddYears(-3);
+
+        var eligibleStudents = studentUsers
+            .Where(s => s.CreatedAt <= cutoffDate && s.IsPassed == false) // Filters students registered >= 3 years ago and active
+            .Select(s => new StudentTransitionVM
+            {
+                UserId = s.Id,
+                FullName = s.FullName ?? "N/A",
+                Email = s.Email ?? "N/A",
+                Department = s.Department ?? "N/A",
+                CurrentCompany = s.CurrentCompany ?? string.Empty,
+                Designation = s.Designation ?? string.Empty
+            })
+            .ToList();
 
         // 2. Fetch all historical student transformation records
         var historicalRecords = await _context.HistoricalStudents
@@ -235,7 +239,7 @@ public class AdminController : Controller
     // POST: /Admin/ConvertToAlumni
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ConvertToAlumni(string userId, string company, string designation)
+    public async Task<IActionResult> ConvertToHistorical(string userId, string company, string designation)
     {
         var user = await _userManager.FindByIdAsync(userId);
         if (user == null)
@@ -244,23 +248,37 @@ public class AdminController : Controller
             return RedirectToAction(nameof(Transitions));
         }
 
-        // 1. Remove from "Student" role and add to "Alumni" role
-        var isStudent = await _userManager.IsInRoleAsync(user, "Student");
-        if (isStudent)
-        {
-            await _userManager.RemoveFromRoleAsync(user, "Student");
-        }
+        //// 1. Remove from "Student" role and add to "Alumni" role
+        //var studentRole = UserRole.Student.ToString();
+        //var alumniRole = UserRole.Alumni.ToString();
 
-        var isAlumni = await _userManager.IsInRoleAsync(user, "Alumni");
-        if (!isAlumni)
-        {
-            await _userManager.AddToRoleAsync(user, "Alumni");
-        }
+        //// 1. Ensure the "Alumni" role exists in AspNetRoles
+        //if (!await _roleManager.RoleExistsAsync(alumniRole))
+        //{
+        //    var createRoleResult = await _roleManager.CreateAsync(new ApplicationRole { Name = alumniRole });
+        //    if (!createRoleResult.Succeeded)
+        //    {
+        //        TempData["ErrorMessage"] = "Failed to ensure Alumni role exists in the database.";
+        //        return RedirectToAction(nameof(Transitions));
+        //    }
+        //}
 
-        // 2. Update user profile fields
-        if (!string.IsNullOrWhiteSpace(company)) user.CurrentCompany = company;
-        if (!string.IsNullOrWhiteSpace(designation)) user.Designation = designation;
-        await _userManager.UpdateAsync(user);
+        //// 2. Remove user from Student role
+        //if (await _userManager.IsInRoleAsync(user, studentRole))
+        //{
+        //    await _userManager.RemoveFromRoleAsync(user, studentRole);
+        //}
+
+        //// 3. Assign user to Alumni role
+        //if (!await _userManager.IsInRoleAsync(user, alumniRole))
+        //{
+        //    await _userManager.AddToRoleAsync(user, alumniRole);
+        //}
+
+        //// 2. Update user profile fields
+        //if (!string.IsNullOrWhiteSpace(company)) user.CurrentCompany = company;
+        //if (!string.IsNullOrWhiteSpace(designation)) user.Designation = designation;
+        //await _userManager.UpdateAsync(user);
 
         // 3. Archive in HistoricalStudents table
         var adminEmail = User.Identity?.Name ?? "Admin";
@@ -270,13 +288,22 @@ public class AdminController : Controller
             FullName = user.FullName ?? "N/A",
             Email = user.Email ?? "N/A",
             Department = user.Department ?? "N/A",
-            GraduationYear = user.GraduationYear,
+            GraduationYear = DateTime.Now.Year,
+            StudentIdNumber= user.RollNumber ?? "N/A",
             ConvertedToAlumniDate = DateTime.UtcNow,
             ConvertedByAdminEmail = adminEmail
         };
+        var existingHistorical = await _context.HistoricalStudents
+            .FirstOrDefaultAsync(h => h.ApplicationUserId == user.Id);
 
-        _context.HistoricalStudents.Add(historicalEntry);
-        await _context.SaveChangesAsync();
+        if (existingHistorical == null)
+        {
+         
+            user.IsPassed = true;
+            await _userManager.UpdateAsync(user);
+            _context.HistoricalStudents.Add(historicalEntry);
+            await _context.SaveChangesAsync();
+        }
 
         TempData["SuccessMessage"] = $"Successfully converted {user.FullName} to Alumni status!";
         return RedirectToAction(nameof(Transitions));
@@ -317,9 +344,10 @@ public class AdminController : Controller
     // POST: /Admin/RejectAlumni
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> RejectAlumni(string id)
+    public async Task<IActionResult> RejectAlumni(Guid id)
     {
-        var user = await _userManager.FindByIdAsync(id);
+        var Id =id.ToString();
+        var user = await _userManager.FindByIdAsync(Id);
         if (user == null)
         {
             TempData["ErrorMessage"] = "User request not found.";

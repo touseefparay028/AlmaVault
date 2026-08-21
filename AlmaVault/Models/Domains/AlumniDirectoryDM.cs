@@ -10,7 +10,7 @@ namespace AlmaVault.Models.Domains
 
         // Foreign key to ApplicationUser (AspNetUsers)
         [Required]
-        public string UserId { get; set; } = string.Empty;
+        public Guid UserId { get; set; }
 
         [ForeignKey(nameof(UserId))]
         public virtual ApplicationUser? User { get; set; }

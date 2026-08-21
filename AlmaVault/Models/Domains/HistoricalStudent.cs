@@ -8,7 +8,7 @@ namespace AlmaVault.Models.Domains
         public Guid Id { get; set; } = Guid.NewGuid();
 
         [Required]
-        public string ApplicationUserId { get; set; } = string.Empty;
+        public Guid ApplicationUserId { get; set; }
 
         [Required]
         [StringLength(100)]

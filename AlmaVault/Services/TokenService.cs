@@ -28,12 +28,12 @@ public class TokenService : ITokenService
         var roles = await _userManager.GetRolesAsync(user);
 
         var claims = new List<Claim>
-        {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim("RollNumber", user.RollNumber ?? string.Empty)
-        };
+{
+    new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()), // Fixed line 32
+    new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
+    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+    new Claim("RollNumber", user.RollNumber ?? string.Empty)
+};
 
         foreach (var role in roles)
         {

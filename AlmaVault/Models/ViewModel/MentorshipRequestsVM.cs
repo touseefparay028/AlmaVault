@@ -9,7 +9,7 @@ namespace AlmaVault.Models.ViewModel
         public class MentorshipRequestCreateViewModel
         {
             [Required]
-            public string MentorId { get; set; } = string.Empty;
+            public Guid MentorId { get; set; }
 
             public string? MentorName { get; set; }
             public string? MentorCompany { get; set; }
@@ -28,20 +28,20 @@ namespace AlmaVault.Models.ViewModel
         // 2. Used for displaying items in lists/tables
         public class MentorshipRequestDisplayViewModel
         {
-            public int Id { get; set; }
+            public Guid Id { get; set; }
             public string Title { get; set; } = string.Empty;
             public string? Note { get; set; }
             public string Status { get; set; } = "Pending";
             public DateTime RequestedDate { get; set; }
 
             // Mentee (Student) Info
-            public string MenteeId { get; set; } = string.Empty;
+            public Guid MenteeId { get; set; } = Guid.NewGuid();
             public string MenteeName { get; set; } = string.Empty;
             public string MenteeEmail { get; set; } = string.Empty;
             public string? MenteeDepartment { get; set; }
 
             // Mentor (Alumni) Info
-            public string MentorId { get; set; } = string.Empty;
+            public Guid MentorId { get; set; } = Guid.NewGuid();
             public string MentorName { get; set; } = string.Empty;
             public string MentorEmail { get; set; } = string.Empty;
             public string? MentorCompany { get; set; }
@@ -51,8 +51,9 @@ namespace AlmaVault.Models.ViewModel
         // 3. Used for browsing mentors in student portal
         public class MentorCardViewModel
         {
-            public string Id { get; set; } = string.Empty;
+            public Guid Id { get; set; } = Guid.NewGuid();
             public string FullName { get; set; } = string.Empty;
+            public string? Email { get; set; }
             public string? Designation { get; set; }
             public string? CurrentCompany { get; set; }
             public string? Department { get; set; }

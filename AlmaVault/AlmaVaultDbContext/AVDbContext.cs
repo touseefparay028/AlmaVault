@@ -4,14 +4,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AlmaVault.Data
 {
-    public class AVDbContext : IdentityDbContext<ApplicationUser>
+    public class AVDbContext : IdentityDbContext<ApplicationUser,ApplicationRole, Guid>
     {
+        public DbSet<ContributionCampaign> ContributionCampaigns { get; set; } = null!;
+        public DbSet<AlumniContribution> AlumniContributions { get; set; } = null!;
         public AVDbContext(DbContextOptions<AVDbContext> options) : base(options) { }
-
         // Master Records & Identity
         public DbSet<HistoricalStudent> HistoricalStudents => Set<HistoricalStudent>();
         public DbSet<MentorshipRequestsDM> MentorshipRequests => Set<MentorshipRequestsDM>();
-
+        public DbSet<MentorshipTasks> MentorshipTask { get; set; }
+        public DbSet<MentorshipFeedback> MentorshipFeedbacks { get; set; }
+        public DbSet<MentorshipNotes> MentorshipNotes => Set<MentorshipNotes>();
         // Modules
         public DbSet<ContributionLedger> ContributionLedgers => Set<ContributionLedger>();
         public DbSet<JobPosting> JobPostings => Set<JobPosting>();
@@ -27,6 +30,11 @@ namespace AlmaVault.Data
             modelBuilder.Entity<HistoricalStudent>()
                 .HasKey(h => h.StudentIdNumber);
 
+            modelBuilder.Entity<AlumniContribution>()
+                .HasOne(c => c.Campaign)
+                .WithMany(m => m.Contributions)
+                .HasForeignKey(c => c.CampaignId)
+                .OnDelete(DeleteBehavior.Cascade);
             // 3. ApplicationUser Configuration (RollNumber declared without FK restriction)
             modelBuilder.Entity<ApplicationUser>(entity =>
             {

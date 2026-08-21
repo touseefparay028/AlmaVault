@@ -3,7 +3,7 @@ namespace AlmaVault.Models.ViewModel
 {
         public class StudentTransitionVM
         {
-            public string UserId { get; set; } = string.Empty;
+        public Guid UserId { get; set; } = Guid.NewGuid();
             public string FullName { get; set; } = string.Empty;
             public string Email { get; set; } = string.Empty;
             public string Department { get; set; } = string.Empty;

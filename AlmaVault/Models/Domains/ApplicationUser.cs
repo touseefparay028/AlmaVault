@@ -4,15 +4,16 @@ namespace AlmaVault.Models.Domains
 {
   
     
-        public class ApplicationUser : IdentityUser
+        public class ApplicationUser : IdentityUser<Guid>
         {
+        
         public string? FullName { get; set; }
             public string? RollNumber { get; set; }
             public string? CurrentCompany { get; set; }
             public string? Designation { get; set; }
         public bool IsAvailableForMentorship { get; set; } = false;
-        public string ? LinekInUrl { get; set; }
-        
+        public string ? LinkedInUrl { get; set; }
+        public bool IsPassed { get; set; } = false;
         public string? Location { get; set; }
         public string ? Department { get; set; }
         public string? ProofDocumentPath { get; set; }

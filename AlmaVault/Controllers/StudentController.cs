@@ -14,13 +14,13 @@ public class StudentController : Controller
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
-    private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly AVDbContext _context;
 
     public StudentController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
-        RoleManager<IdentityRole> roleManager,
+        RoleManager<ApplicationRole> roleManager,
         AVDbContext context)
     {
         _userManager = userManager;
@@ -64,7 +64,7 @@ public class StudentController : Controller
         // 3. Ensure "Student" role exists
         if (!await _roleManager.RoleExistsAsync("Student"))
         {
-            await _roleManager.CreateAsync(new IdentityRole("Student"));
+            await _roleManager.CreateAsync(new ApplicationRole { Name = "Student" });
         }
         
         // 4. Create Student Account
@@ -72,6 +72,7 @@ public class StudentController : Controller
         {
             FullName = model.FullName,
             UserName = model.Email,
+            Department= model.Department,
             Email = model.Email,
             RollNumber = model.RollNumber,
             IsVerified = true, // Auto-verified via HistoricalStudents record
@@ -83,7 +84,17 @@ public class StudentController : Controller
         {
             await _userManager.AddToRoleAsync(studentUser, "Student");
             await _signInManager.SignInAsync(studentUser, isPersistent: false);
-            return RedirectToAction(nameof(StudentLogin));
+            //var HisoricalStudent = new HistoricalStudent
+            //{
+            //    StudentIdNumber = model.RollNumber,
+            //    FullName = model.FullName,
+            //    Email = model.Email,
+            //    Department = model.Department,
+            //    GraduationYear = DateTime.UtcNow.Year, // Assuming current year for graduation
+            //};
+            //_context.HistoricalStudents.Add(HisoricalStudent);
+            //await _context.SaveChangesAsync();
+            //return RedirectToAction(nameof(StudentLogin));
         }
 
         foreach (var error in result.Errors)
@@ -174,12 +185,18 @@ public class StudentController : Controller
     {
         var currentUser = await _userManager.GetUserAsync(User);
         if (currentUser == null)
-            return RedirectToAction(nameof(StudentLogin), "Student"); // Fixed: target Student controller
+            return RedirectToAction(nameof(StudentLogin), "Student");
 
-        var alumniList = await _userManager.GetUsersInRoleAsync("Alumni");
-        ViewBag.VerifiedAlumniCount = alumniList.Count; // Fixed: store count integer rather than list object
+        // Fetch verified alumni
+        var alumniList = (await _userManager.GetUsersInRoleAsync("Alumni"))
+            .Where(u => u.IsVerified)
+            .ToList();
+
+        ViewBag.VerifiedAlumni = alumniList;
+        ViewBag.VerifiedAlumniCount = alumniList.Count;
         ViewBag.ActiveJobPostings = await _context.JobPostings.CountAsync();
-     ViewBag.nameofuser= currentUser;
+        ViewBag.nameofuser = currentUser;
+
         return View(currentUser);
     }
     // GET: /Student/AlumniDirectory

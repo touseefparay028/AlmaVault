@@ -6,7 +6,7 @@ namespace AlmaVault.Models.Domains
     public class MentorshipRequestsDM
     {
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         [Required]
         [StringLength(150)]
@@ -17,14 +17,14 @@ namespace AlmaVault.Models.Domains
 
         // Foreign Key for Mentee (Student)
         [Required]
-        public string MenteeId { get; set; } = string.Empty;
+        public Guid MenteeId { get; set; } = Guid.NewGuid();
 
         [ForeignKey(nameof(MenteeId))]
         public virtual ApplicationUser? Mentee { get; set; }
 
         // Foreign Key for Mentor (Alumni)
         [Required]
-        public string MentorId { get; set; } = string.Empty;
+        public Guid MentorId { get; set; } = Guid.NewGuid();
 
         [ForeignKey(nameof(MentorId))]
         public virtual ApplicationUser? Mentor { get; set; }
@@ -36,5 +36,7 @@ namespace AlmaVault.Models.Domains
         public DateTime RequestedDate { get; set; } = DateTime.UtcNow;
 
         public DateTime? RespondedDate { get; set; }
+        public virtual ICollection<MentorshipTasks> Tasks { get; set; } = new List<MentorshipTasks>();
+
     }
 }

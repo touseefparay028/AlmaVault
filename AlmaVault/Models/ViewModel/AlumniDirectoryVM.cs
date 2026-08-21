@@ -9,7 +9,7 @@
 
     public class AlumniCardDto
     {
-        public string Id { get; set; } = string.Empty;
+        public Guid Id { get; set; } = Guid.NewGuid();
         public string FullName { get; set; } = string.Empty;
         public string Department { get; set; } = string.Empty;
         public string CurrentCompany { get; set; } = string.Empty;

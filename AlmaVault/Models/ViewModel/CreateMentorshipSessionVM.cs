@@ -5,7 +5,7 @@ namespace AlmaVault.Models.ViewModel
     public class CreateMentorshipSessionVM
     {
         [Required]
-        public int MentorAlumniId { get; set; }
+        public Guid MentorAlumniId { get; set; }
 
         [Required]
         public string Topic { get; set; } = string.Empty;

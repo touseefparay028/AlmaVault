@@ -30,8 +30,9 @@ namespace AlmaVault.Controllers
         [HttpGet]
         public async Task<IActionResult> Browse(string? search)
         {
-            var studentId = _userManager.GetUserId(User);
-
+            var studentIds = _userManager.GetUserId(User);
+            var studentId = Guid.Parse(studentIds);
+            
             // Fetch Alumni available for mentorship
             var query = _context.Users
                 .Where(u => u.IsAvailableForMentorship && u.IsVerified);
@@ -57,7 +58,7 @@ namespace AlmaVault.Controllers
                 CurrentCompany = m.CurrentCompany,
                 Department = m.Department,
                 GraduationYear = m.GraduationYear,
-                LinkedInUrl = m.LinekInUrl,
+                LinkedInUrl = m.LinkedInUrl,
                 HasPendingRequest = activeRequestMentorIds.Contains(m.Id)
             }).ToListAsync();
 
@@ -70,9 +71,10 @@ namespace AlmaVault.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SendRequest(MentorshipRequestCreateViewModel model)
         {
-            var studentId = _userManager.GetUserId(User);
+            var studentIds = _userManager.GetUserId(User);
+            var studentId = Guid.Parse(studentIds);
 
-            if (string.IsNullOrEmpty(studentId)) return RedirectToAction("Login", "Account");
+           
 
             if (!ModelState.IsValid)
             {
@@ -113,7 +115,8 @@ namespace AlmaVault.Controllers
         [HttpGet]
         public async Task<IActionResult> AlumniRequests()
         {
-            var alumniId = _userManager.GetUserId(User);
+            var alumniIds = _userManager.GetUserId(User);
+            var alumniId = Guid.Parse(alumniIds);
 
             var requests = await _context.MentorshipRequests
                 .Include(r => r.Mentee)
@@ -141,9 +144,10 @@ namespace AlmaVault.Controllers
         [Authorize(Roles = "Alumni")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Respond(int requestId, string status)
+        public async Task<IActionResult> Respond(Guid requestId, string status)
         {
-            var alumniId = _userManager.GetUserId(User);
+            var alumniIds = _userManager.GetUserId(User);
+            var alumniId = Guid.Parse(alumniIds);
 
             var request = await _context.MentorshipRequests
                 .FirstOrDefaultAsync(r => r.Id == requestId && r.MentorId == alumniId);
@@ -168,11 +172,12 @@ namespace AlmaVault.Controllers
 
         // GET: /Mentorship/StudentRequests
         // Student views history of sent requests
-        [Authorize(Roles = "Student")]
+        //[Authorize(Roles = "Student")]
         [HttpGet]
         public async Task<IActionResult> StudentRequests()
         {
-            var studentId = _userManager.GetUserId(User);
+            var studentIds = _userManager.GetUserId(User);
+            var studentId = Guid.Parse(studentIds);
 
             var requests = await _context.MentorshipRequests
                 .Include(r => r.Mentor)
@@ -194,6 +199,41 @@ namespace AlmaVault.Controllers
                 .ToListAsync();
 
             return View(requests);
+        }
+        [HttpGet]
+        public async Task<IActionResult> MentorshipDetails(Guid id)
+        {
+            var request = await _context.MentorshipRequests
+                .Include(m => m.Mentee)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (request == null)
+            {
+                return NotFound();
+            }
+
+            var vm = new MentorshipDetailsVM
+            {
+                RequestId = request.Id,
+                Title = request.Title,
+                Note = request.Note,
+                Status = request.Status,
+                RequestedDate = request.RequestedDate,
+                MenteeCard = new MentorCardViewModel
+                {
+                    Id = request.Mentee?.Id ?? Guid.Empty,
+                    FullName = request.Mentee?.FullName ?? "Student",
+                    Email = request.Mentee?.Email,
+                    Department = request.Mentee?.Department,
+                    GraduationYear = request.Mentee?.GraduationYear ?? 0,
+                    Designation = request.Mentee?.Designation,
+                    CurrentCompany = request.Mentee?.CurrentCompany,
+                    LinkedInUrl = request.Mentee?.LinkedInUrl,
+                    IsVerified = request.Mentee?.IsVerified ?? false
+                }
+            };
+
+            return View(vm);
         }
     }
 }

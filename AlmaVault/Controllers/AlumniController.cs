@@ -2,6 +2,7 @@
 using AlmaVault.Models.Domains;
 using AlmaVault.Models.ViewModel;
 using AlmaVault.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,13 +13,14 @@ namespace AlmaVault.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly RoleManager<ApplicationRole> _roleManager;
         private readonly AVDbContext _context;
 
         public AlumniController(
+            
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
-            RoleManager<IdentityRole> roleManager,
+            RoleManager<ApplicationRole> roleManager,
             AVDbContext context)
         {
             _userManager = userManager;
@@ -61,18 +63,18 @@ namespace AlmaVault.Controllers
                 return View("AlumniRegister",model);
             }
 
-            // 3. Check if Roll Number is already registered in AspNetUsers
-            var existingRoll = await _context.Users.AnyAsync(u => u.RollNumber == model.RollNumber);
-            if (existingRoll)
-            {
-                ModelState.AddModelError(nameof(model.RollNumber), "An account has already been created for this Roll Number.");
-                return View("AlumniRegister",model);
-            }
+            //// 3. Check if Roll Number is already registered in AspNetUsers
+            //var existingRoll = await _context.Users.AnyAsync(u => u.RollNumber == model.RollNumber);
+            //if (existingRoll)
+            //{
+            //    ModelState.AddModelError(nameof(model.RollNumber), "An account has already been created for this Roll Number.");
+            //    return View("AlumniRegister",model);
+            //}
 
             // 4. Ensure "Alumni" role exists
             if (!await _roleManager.RoleExistsAsync("Alumni"))
             {
-                await _roleManager.CreateAsync(new IdentityRole("Alumni"));
+                await _roleManager.CreateAsync(new ApplicationRole { Name = "Alumni" });
             }
 
             // 5. Create Alumni Account
@@ -106,21 +108,64 @@ namespace AlmaVault.Controllers
             return View(model);
         }
         [HttpGet]
+        [Authorize(Roles = "Alumni")]
         public async Task<IActionResult> AlumniDashboard()
         {
             var user = await _userManager.GetUserAsync(User);
+            
             if (user == null)
             {
-                return RedirectToAction("StudentLogin", "Student");
+                return RedirectToAction("AlumniLogin", "Alumni");
             }
 
-            // Fetch directory details if present
-            var directoryEntry = await _context.AlumniDirectoryDMs
-                .FirstOrDefaultAsync(d => d.UserId == user.Id);
+            // 1. Fetch Mentorship Requests sent to this Alumni
+            var mentorshipRequests = await _context.MentorshipRequests
+                .Include(m => m.Mentee)
+                .Where(m => m.MentorId == user.Id)
+                .OrderByDescending(m => m.RequestedDate)
+                .Select(m => new AlmaVault.Models.ViewModel.MentorshipRequestsVM.MentorshipRequestDisplayViewModel
+                {
+                    Id = m.Id,
+                    Title = m.Title,
+                    Note = m.Note,
+                    MenteeName = m.Mentee != null ? m.Mentee.FullName : "Student",
+                    MenteeEmail = m.Mentee != null ? m.Mentee.Email : string.Empty,
+                    RequestedDate = m.RequestedDate,
+                    Status = m.Status
+                })
+                .ToListAsync();
 
-            ViewBag.DirectoryEntry = directoryEntry;
+            ViewBag.MentorshipRequests = mentorshipRequests;
+            // Fetch the logged-in user's ID
+            var userIds = _userManager.GetUserId(User);
+            var userId = Guid.Parse(userIds);
 
-            return View(user);
+            // Count pending requests assigned to the current mentor
+             ViewBag.pendingMentorshipCount = await _context.MentorshipRequests
+                .CountAsync(m => m.Status == "Pending" && m.MentorId == userId);
+
+            // 2. Fetch Active Job Postings count posted by this Alumni
+            var activeJobsCounts = await _context.JobPostings
+                .CountAsync(j => j.PostedByUserId == user.Id && j.IsActive);
+
+            ViewBag.ActiveJobsCount = activeJobsCounts;
+
+            // 3. Map ApplicationUser to MentorCardViewModel expected by @model
+            var viewModel = new AlmaVault.Models.ViewModel.MentorshipRequestsVM.MentorCardViewModel
+            {
+                Id = user.Id,
+                FullName = user.FullName ?? "Alumnus",
+                Designation = user.Designation,
+                Email = user.Email,
+                CurrentCompany = user.CurrentCompany,
+                Department = user.Department,
+                GraduationYear = user.GraduationYear,
+                IsAvailableForMentorship = user.IsAvailableForMentorship,
+                IsVerified = user.IsVerified,
+                LinkedInUrl = user.LinkedInUrl // Maps ApplicationUser's LinekInUrl property
+            };
+
+            return View(viewModel);
         }
         // GET: /Alumni/Login
         [HttpGet]
@@ -197,6 +242,38 @@ namespace AlmaVault.Controllers
         {
             await _signInManager.SignOutAsync();
             return RedirectToAction(nameof(AlumniLogin));
+        }
+        [HttpPost]
+        [Authorize(Roles = "Alumni")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleMentorshipAvailability()
+        {
+            // 1. Get the current logged-in user
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToAction("AlumniLogin", "Alumni");
+            }
+
+            // 2. Toggle the IsAvailableForMentorship boolean flag
+            user.IsAvailableForMentorship = !user.IsAvailableForMentorship;
+
+            // 3. Update the database record
+            var result = await _userManager.UpdateAsync(user);
+
+            if (result.Succeeded)
+            {
+                TempData["SuccessMessage"] = user.IsAvailableForMentorship
+                    ? "Mentorship status updated: You are now AVAILABLE for student requests."
+                    : "Mentorship status updated: You are now UNAVAILABLE for student requests.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to update your mentorship availability. Please try again.";
+            }
+
+            // 4. Redirect back to the Alumni Dashboard view
+            return RedirectToAction(nameof(AlumniDashboard));
         }
     }
 }

@@ -76,16 +76,16 @@
                                         <td><span class="badge bg-light text-dark border">@student.Department</span></td>
                                         <td><strong class="text-primary">@student.GraduationYear</strong></td>
                                         <td>
-                                            <form asp-action="ConvertToAlumni" method="post" id="form-@student.UserId" class="d-flex gap-2">
+                                            <form asp-action="ConvertToHistorical" method="post" id="form-@student.UserId" class="d-flex gap-2">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="userId" value="@student.UserId" />
-                                                <input type="text" name="company" value="@student.CurrentCompany" class="form-control form-control-sm" placeholder="Company" />
-                                                <input type="text" name="designation" value="@student.Designation" class="form-control form-control-sm" placeholder="Designation" />
+                                                @* <input type="text" name="company" value="@student.CurrentCompany" class="form-control form-control-sm" placeholder="Company" />
+                                                <input type="text" name="designation" value="@student.Designation" class="form-control form-control-sm" placeholder="Designation" /> *@
                                             </form>
                                         </td>
                                         <td class="text-end">
                                             <button type="submit" form="form-@student.UserId" class="btn btn-sm btn-success rounded-pill px-3 fw-semibold">
-                                                <i class="bi bi-arrow-up-circle me-1"></i> Convert to Alumni
+                                                <i class="bi bi-arrow-up-circle me-1"></i> Mark Passed
                                             </button>
                                         </td>
                                     </tr>

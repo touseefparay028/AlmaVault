@@ -1,0 +1,48 @@
+﻿@model AlmaVault.Models.ViewModel.DonateViewModel
+
+<div class="container py-4" style="max-width: 600px;">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-primary text-white p-3">
+            <h4 class="mb-0 fw-bold">Make a Contribution</h4>
+            <small class="text-white-50">@Model.CampaignTitle</small>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="Donate" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="CampaignId" />
+                <input type="hidden" asp-for="CampaignTitle" />
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Contribution Type</label>
+                    <select asp-for="ContributionType" class="form-select" id="typeSelect">
+                        <option value="MonetaryOneTime">One-Time Donation</option>
+                        <option value="MonetaryRecurring">Recurring Monthly</option>
+                        <option value="EquipmentGrant">Equipment Grant</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Amount" class="form-label fw-semibold">Amount ($)</label>
+                    <input asp-for="Amount" class="form-control" placeholder="100.00" type="number" step="0.01" />
+                    <span asp-validation-for="Amount" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3 d-none" id="equipmentGroup">
+                    <label asp-for="EquipmentDetails" class="form-label fw-semibold">Grant Specification</label>
+                    <textarea asp-for="EquipmentDetails" class="form-control" rows="3" placeholder="Describe hardware, software licenses, or equipment..."></textarea>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-success fw-bold px-4">Submit Contribution</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('typeSelect').addEventListener('change', function () {
+        document.getElementById('equipmentGroup').classList.toggle('d-none', this.value !== 'EquipmentGrant');
+    });
+</script>

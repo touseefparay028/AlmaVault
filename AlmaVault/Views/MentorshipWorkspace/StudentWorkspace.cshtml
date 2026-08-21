@@ -1,0 +1,201 @@
+﻿@model AlmaVault.Models.ViewModel.MentorshipDetailsVM
+
+@{
+    ViewData["Title"] = "Mentorship Workspace";
+    var tasks = ViewBag.Tasks as List<AlmaVault.Models.ViewModel.TaskItemVM> ?? new List<AlmaVault.Models.ViewModel.TaskItemVM>();
+}
+
+<div class="container py-4">
+    @Html.AntiForgeryToken()
+
+    <!-- Header Navigation & Action Bar -->
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+        <div>
+            <a asp-action="StudentDashboard" asp-controller="Student" class="text-decoration-none text-muted small fw-semibold">
+                <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+            </a>
+            <h3 class="fw-bold text-dark mb-0 mt-1">@Model.Title</h3>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-primary btn-sm rounded-pill fw-semibold" data-bs-toggle="modal" data-bs-target="#uploadNoteModal">
+                <i class="bi bi-file-earmark-pdf me-1"></i> Upload PDF Note
+            </button>
+            <span class="badge @(Model.Status == "Approved" || Model.Status == "Accepted" ? "bg-success-subtle text-success border border-success" : "bg-primary-subtle text-primary border border-primary") fs-6 px-3 py-2 rounded-pill">
+                Status: @Model.Status
+            </span>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- LEFT COLUMN: MENTOR CARD & SHARED NOTES -->
+        <div class="col-lg-4">
+            <!-- Mentor Details Card -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                <h6 class="fw-bold text-dark mb-3">Assigned Mentor</h6>
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="avatar-circle bg-primary text-white d-flex align-items-center justify-content-center rounded-circle fs-5 fw-bold" style="width: 48px; height: 48px;">
+                        @(string.Concat(Model.MenteeCard.FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(n => n[0])).ToUpper())
+                    </div>
+                    <div>
+                        <h6 class="fw-bold text-dark mb-0">@Model.MenteeCard.FullName</h6>
+                        <small class="text-muted">@Model.MenteeCard.Designation at @Model.MenteeCard.CurrentCompany</small>
+                    </div>
+                </div>
+                <div class="small text-muted mb-2">
+                    <i class="bi bi-building me-2"></i> Department: @Model.MenteeCard.Department
+                </div>
+                <hr class="text-muted opacity-25" />
+                <div class="small text-muted">
+                    <i class="bi bi-calendar3 me-2"></i> Requested: @Model.RequestedDate.ToString("MMM dd, yyyy")
+                </div>
+            </div>
+
+            <!-- Notes & Remarks Section -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <h6 class="fw-bold text-dark mb-3">
+                    <i class="bi bi-journal-text me-2 text-primary"></i>Request Remarks & Notes
+                </h6>
+                @if (!string.IsNullOrWhiteSpace(Model.Note))
+                {
+                    <div class="p-3 bg-light rounded-3 text-dark small leading-relaxed">
+                        @Model.Note
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4 text-muted small">
+                        <i class="bi bi-sticky d-block fs-4 mb-2 text-secondary"></i>
+                        No remarks or specific notes attached to this request yet.
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: ASSIGNED TASKS & PROGRESS -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-0">Assigned Tasks</h5>
+                        <small class="text-muted">Track and mark off active action items assigned by your mentor.</small>
+                    </div>
+                    <span class="badge bg-light text-dark border">
+                        @tasks.Count(t => t.IsCompleted) / @tasks.Count Completed
+                    </span>
+                </div>
+
+                <!-- Progress Bar -->
+                @{
+                    int progressPercent = tasks.Any() ? (int)Math.Round((double)tasks.Count(t => t.IsCompleted) / tasks.Count * 100) : 0;
+                }
+                <div class="progress mb-4" style="height: 8px;">
+                    <div class="progress-bar bg-success rounded-pill" role="progressbar" style="width: @progressPercent%;" aria-valuenow="@progressPercent" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+
+                <!-- Task List -->
+                <div class="list-group list-group-flush">
+                    @if (tasks.Any())
+                    {
+                        @foreach (var task in tasks)
+                        {
+                            <div class="list-group-item px-0 py-3 d-flex align-items-start justify-content-between border-bottom">
+                                <div class="d-flex align-items-start gap-3">
+                                    <div class="form-check mt-1">
+                                        <input class="form-check-input task-checkbox"
+                                               type="checkbox"
+                                               data-task-id="@task.Id"
+                                               @(task.IsCompleted ? "checked" : "") />
+                                    </div>
+                                    <div>
+                                        <p class="mb-1 text-dark fw-medium @(task.IsCompleted ? "text-decoration-line-through text-muted" : "")">
+                                            @task.Description
+                                        </p>
+                                        <div class="d-flex gap-3 align-items-center">
+                                            <small class="text-muted">
+                                                <i class="bi bi-clock me-1"></i> Due: @task.DueDate.ToString("MMM dd, yyyy")
+                                            </small>
+                                            @if (task.IsCompleted && task.CompletedAt.HasValue)
+                                            {
+                                                <small class="text-success fw-semibold">
+                                                    <i class="bi bi-check-circle me-1"></i> Completed @task.CompletedAt.Value.ToString("MMM dd")
+                                                </small>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-check2-all fs-1 text-secondary d-block mb-2"></i>
+                            <p class="mb-0">No tasks assigned for this mentorship request yet.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- UPLOAD PDF NOTE MODAL -->
+<div class="modal fade" id="uploadNoteModal" tabindex="-1" aria-labelledby="uploadNoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark" id="uploadNoteModalLabel">Upload Document / Note</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="UploadNote" asp-controller="Mentorship" method="post" enctype="multipart/form-data">
+                <div class="modal-body py-3">
+                    <input type="hidden" name="RequestId" value="@Model.RequestId" />
+
+                    <div class="mb-3">
+                        <label asp-for="NewNote.PdfFile" class="form-label fw-semibold text-dark">Select PDF Document</label>
+                        <input asp-for="NewNote.PdfFile" type="file" class="form-control" accept=".pdf" required />
+                        <span asp-validation-for="NewNote.PdfFile" class="text-danger small"></span>
+                        <div class="form-text">Upload notes, homework, or feedback files (PDF format only).</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-3 fw-semibold" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-3 fw-semibold">Upload Note</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.task-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', async function () {
+                const taskId = this.getAttribute('data-task-id');
+                const isChecked = this.checked;
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+                try {
+                    const response = await fetch('/Mentorship/ToggleTaskStatus', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': token || ''
+                        },
+                        body: JSON.stringify({ taskId: taskId, isCompleted: isChecked })
+                    });
+
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Failed to update task status.');
+                        this.checked = !isChecked;
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    this.checked = !isChecked;
+                }
+            });
+        });
+    </script>
+}

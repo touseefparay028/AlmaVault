@@ -68,7 +68,7 @@
                                 <td class="text-end">
                                     @if (item.Status == "Pending")
                                     {
-                                        <form asp-action="Respond" method="post" class="d-inline">
+                                        <form asp-action="Respond" asp-controller="Mentorship" method="post" class="d-inline">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="requestId" value="@item.Id" />
                                             <button type="submit" name="status" value="Approved" class="btn btn-sm btn-success rounded-pill px-3">Accept</button>

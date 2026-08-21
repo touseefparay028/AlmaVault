@@ -5,7 +5,7 @@ namespace AlmaVault.Models.ViewModel
     public class CreateJobPostingVM
     {
         [Required]
-        public int AlumniId { get; set; }
+        public Guid AlumniId { get; set; }
 
         [Required]
         public string Title { get; set; } = string.Empty;

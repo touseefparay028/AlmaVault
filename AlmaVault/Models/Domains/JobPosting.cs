@@ -35,7 +35,7 @@ namespace AlmaVault.Models.Domains
 
         // Foreign Key to ApplicationUser (Alumnus who created the post)
         [Required]
-        public string PostedByUserId { get; set; } = string.Empty;
+        public Guid PostedByUserId { get; set; }
 
         [ForeignKey(nameof(PostedByUserId))]
         public virtual ApplicationUser? PostedByUser { get; set; }

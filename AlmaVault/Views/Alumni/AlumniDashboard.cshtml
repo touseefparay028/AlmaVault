@@ -104,10 +104,10 @@
                     <h5 class="fw-bold mb-0"><i class="bi bi-person-workspace text-primary me-2"></i>Mentorship Queue</h5>
 
                     <!-- Mentorship Availability Switch -->
-                    <form asp-action="ToggleMentorship" method="post" class="d-inline">
+                    <form asp-action="ToggleMentorshipAvailability" asp-controller="Alumni" method="post" class="d-inline">
                         @Html.AntiForgeryToken()
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" id="mentorshipToggle"
+                            <input class="form-check-input" type="checkbox" id="mentorshipToggle"
                                    @(Model.IsAvailableForMentorship ? "checked" : "") onchange="this.form.submit()">
                             <label class="form-check-label small fw-semibold" for="mentorshipToggle">
                                 @(Model.IsAvailableForMentorship ? "Available for Mentorship" : "Unavailable")
@@ -131,7 +131,7 @@
                                 <tr>
                                     <th>Mentee Student</th>
                                     <th>Topic / Title</th>
-                                    <th>Requested</th>
+                                    <th>Requested On</th>
                                     <th>Status</th>
                                     <th class="text-end">Actions</th>
                                 </tr>
@@ -141,7 +141,7 @@
                                 {
                                     <tr>
                                         <td>
-                                            <div class="fw-bold">@(req.MenteeName?? "Student")</div>
+                                            <div class="fw-bold">@(req.MenteeName ?? "Student")</div>
                                             <span class="small text-muted">@(req.MenteeEmail)</span>
                                         </td>
                                         <td>@req.Title</td>
@@ -163,7 +163,7 @@
                                         <td class="text-end">
                                             @if (req.Status == "Pending")
                                             {
-                                                <form asp-action="RespondMentorship" method="post" class="d-inline">
+                                                <form asp-action="Respond" asp-controller="Mentorship" method="post" class="d-inline">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="requestId" value="@req.Id" />
                                                     <button type="submit" name="status" value="Approved" class="btn btn-sm btn-success rounded-pill px-3">Accept</button>
@@ -172,15 +172,27 @@
                                             }
                                             else if (req.Status == "Approved")
                                             {
-                                                <a href="mailto:@req.MenteeEmail" class="btn btn-sm btn-outline-primary rounded-pill">
-                                                    <i class="bi bi-envelope me-1"></i> Contact
-                                                </a>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <a asp-controller="Mentorship" asp-action="MentorshipDetails" asp-route-id="@req.Id" class="btn btn-outline-primary rounded-pill px-3 me-1">
+                                                        <i class="bi bi-box-arrow-up-right me-1"></i> Open
+                                                    </a>
+                                                    <a href="mailto:@req.MenteeEmail" class="btn btn-outline-secondary rounded-pill px-3">
+                                                        <i class="bi bi-envelope me-1"></i> Contact
+                                                    </a>
+                                                </div>
                                             }
                                         </td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- Bottom Right View All Anchor -->
+                    <div class="d-flex justify-content-end pt-3 border-top mt-2">
+                        <a asp-controller="Mentorship" asp-action="AlumniRequests" class="btn btn-link text-primary text-decoration-none fw-semibold p-0">
+                            View All Requests <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
                     </div>
                 }
             </div>
@@ -222,7 +234,7 @@
                     </li>
                     <li class="mb-3">
                         <strong class="small text-muted d-block">Email Address</strong>
-                        <span>@Model.</span>
+                        <span>@Model.Email</span>
                     </li>
                     <li class="mb-3">
                         <strong class="small text-muted d-block">Current Position</strong>
@@ -254,7 +266,7 @@
             <form asp-action="UpdateProfile" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
                 <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold" ideditProfileModalLabel>Update Professional Profile</h5>
+                    <h5 class="modal-title fw-bold" id="editProfileModalLabel">Update Professional Profile</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
